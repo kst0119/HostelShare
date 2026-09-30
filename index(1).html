@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>HostelShare v1.1</title>
+<style>
+:root{--navy:#1f3b64;--bg:#f5f7fa;--card:#fff;--muted:#667085;--line:#d8dee8;--ok:#1d7a46;--warn:#9a6700;--danger:#b42318}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#172033}
+header{background:var(--navy);color:#fff;padding:18px 28px;display:flex;justify-content:space-between;align-items:center}
+.brand{font-size:23px;font-weight:700}.tag{font-size:13px}
+nav{background:#fff;border-bottom:1px solid var(--line);padding:10px 24px;display:flex;gap:8px;flex-wrap:wrap}
+nav button{border:0;background:#eef3f8;color:var(--navy);padding:9px 14px;border-radius:7px;cursor:pointer;font-weight:600}
+nav button.active{background:var(--navy);color:#fff}
+main{max-width:1120px;margin:24px auto;padding:0 18px}.page{display:none}.page.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(20,30,50,.04)}
+h1{font-size:25px;margin:0 0 8px}.muted{color:var(--muted);font-size:14px}.stat{font-size:30px;font-weight:700;color:var(--navy);margin-top:10px}
+.item{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding:13px 0;gap:15px}
+.badge{padding:5px 9px;border-radius:12px;background:#e9f6ef;color:var(--ok);font-size:12px;font-weight:700}
+.badge.warn{background:#fff3cd;color:var(--warn)} .badge.red{background:#fee4e2;color:var(--danger)}
+.btn{background:var(--navy);color:#fff;border:0;border-radius:7px;padding:9px 12px;cursor:pointer}.btn.secondary{background:#eef3f8;color:var(--navy)}
+input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:7px;margin:7px 0 12px}
+label{font-size:13px;font-weight:700}.notice{padding:12px;border-radius:8px;margin-top:12px}
+.success{background:#e9f6ef;border:1px solid #b8dec8;color:#175b37}.error{background:#fee4e2;border:1px solid #f3b4ae;color:#8d1d15}
+table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid var(--line);padding:10px;text-align:left;font-size:14px}th{color:var(--navy)}
+.small{font-size:12px}.empty{padding:18px;text-align:center;color:var(--muted)}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.tag{display:none}}
+</style>
+</head>
+<body>
+<header><div class="brand">HostelShare</div><div class="tag">v1.1 • Tested Front-End Prototype</div></header>
+<nav>
+<button class="active" onclick="showPage('dashboard',this)">Dashboard</button>
+<button onclick="showPage('items',this)">Browse Items</button>
+<button onclick="showPage('request',this)">Post Requirement</button>
+<button onclick="showPage('transactions',this)">Transactions</button>
+</nav>
+<main>
+<section id="dashboard" class="page active">
+<h1>Student Dashboard</h1><p class="muted">Current prototype status and recommended hostel resources.</p>
+<div class="grid">
+<div class="card"><div class="muted">Available Items</div><div class="stat" id="itemCount">0</div></div>
+<div class="card"><div class="muted">Active Requests</div><div class="stat" id="requestCount">0</div></div>
+<div class="card"><div class="muted">Trust Score</div><div class="stat">4.8/5</div></div>
+</div>
+<div class="card" style="margin-top:16px"><h3>Recommended Items</h3><div id="recommendations"></div></div>
+</section>
+
+<section id="items" class="page">
+<h1>Browse & Match Items</h1><p class="muted">Search items posted by verified hostel residents.</p>
+<div class="card"><input id="search" aria-label="Search items" placeholder="Search calculator, charger, book..." oninput="filterItems()">
+<div id="itemsList"></div></div>
+</section>
+
+<section id="request" class="page">
+<h1>Post Borrow Requirement</h1><p class="muted">Create a requirement and let HostelShare match suitable lenders.</p>
+<div class="card">
+<label for="reqItem">Item required</label><input id="reqItem" maxlength="60" placeholder="e.g., Calculator">
+<label for="duration">Required duration</label><select id="duration"><option>1 day</option><option>2 days</option><option>3 days</option><option>1 week</option></select>
+<label for="purpose">Purpose / note</label><input id="purpose" maxlength="120" placeholder="e.g., Need for tomorrow's practical">
+<button class="btn" onclick="postRequirement()">Post Requirement</button>
+<div id="reqMsg"></div>
+</div>
+</section>
+
+<section id="transactions" class="page">
+<h1>Transactions & Return Tracking</h1><p class="muted">Track handover, due date and return status.</p>
+<div class="card"><table><thead><tr><th>Item</th><th>Status</th><th>Due Date</th><th>Verification</th><th>Action</th></tr></thead>
+<tbody id="transactionBody"></tbody></table>
+<div id="transactionMsg"></div>
+</div>
+</section>
+</main>
+<script>
+const defaultItems=[
+{name:"Scientific Calculator",cat:"Electronics",room:"B-204",owner:"Student A",days:"2 days"},
+{name:"Engineering Drawing Set",cat:"Academic",room:"A-112",owner:"Student B",days:"3 days"},
+{name:"USB-C Charger",cat:"Electronics",room:"C-103",owner:"Student C",days:"3 days"},
+{name:"Umbrella",cat:"Utility",room:"A-118",owner:"Student D",days:"1 day"}
+];
+const defaultTx=[
+{name:"Scientific Calculator",status:"Borrowed",due:"03 Oct 2026",verified:"QR Handover Verified"},
+{name:"USB-C Charger",status:"Return Due",due:"01 Oct 2026",verified:"QR Handover Verified"}
+];
+let items=JSON.parse(localStorage.getItem("hs_items")||"null")||defaultItems;
+let requests=JSON.parse(localStorage.getItem("hs_requests")||"[]");
+let tx=JSON.parse(localStorage.getItem("hs_tx")||"null")||defaultTx;
+
+function showPage(id,btn){document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");if(id==="transactions")renderTx()}
+function esc(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function renderItems(list=items){const el=document.getElementById("itemsList");if(!list.length){el.innerHTML='<div class="empty">No matching items found.</div>';return}
+el.innerHTML=list.map((x,i)=>`<div class="item"><div><b>${esc(x.name)}</b><div class="muted">${esc(x.cat)} • Room ${esc(x.room)} • Owner: ${esc(x.owner)}</div></div><div><span class="badge">Available</span> <button class="btn" onclick="requestItem(${i})">Request</button></div></div>`).join("")}
+function filterItems(){const q=document.getElementById("search").value.toLowerCase().trim();renderItems(items.filter(x=>(x.name+" "+x.cat+" "+x.room).toLowerCase().includes(q)))}
+function requestItem(i){document.getElementById("reqItem").value=items[i].name;showPage("request",document.querySelectorAll("nav button")[2]);document.getElementById("purpose").focus()}
+function postRequirement(){const n=document.getElementById("reqItem").value.trim();const p=document.getElementById("purpose").value.trim();const d=document.getElementById("duration").value;const m=document.getElementById("reqMsg");
+if(!n){m.innerHTML='<div class="notice error">Item name is required.</div>';return}
+if(!p){m.innerHTML='<div class="notice error">Please enter a short purpose/note.</div>';return}
+requests.push({item:n,duration:d,purpose:p});localStorage.setItem("hs_requests",JSON.stringify(requests));
+m.innerHTML='<div class="notice success">Requirement posted successfully. Matching will identify available lenders.</div>';document.getElementById("reqItem").value="";document.getElementById("purpose").value="";updateStats()}
+function renderTx(){const body=document.getElementById("transactionBody");if(!tx.length){body.innerHTML='<tr><td colspan="5" class="empty">No transactions available.</td></tr>';return}
+body.innerHTML=tx.map((x,i)=>`<tr><td>${esc(x.name)}</td><td><span class="badge ${x.status==="Return Due"?"warn":""}">${esc(x.status)}</span></td><td>${esc(x.due)}</td><td>${esc(x.verified)}</td><td>${x.status!=="Returned"?`<button class="btn secondary" onclick="markReturned(${i})">Mark Returned</button>`:"<span class='badge'>Completed</span>"}</td></tr>`).join("")}
+function markReturned(i){tx[i].status="Returned";localStorage.setItem("hs_tx",JSON.stringify(tx));renderTx();document.getElementById("transactionMsg").innerHTML='<div class="notice success">Return recorded successfully and transaction history updated.</div>'}
+function updateStats(){document.getElementById("itemCount").textContent=items.length;document.getElementById("requestCount").textContent=requests.length;document.getElementById("recommendations").innerHTML=items.slice(0,3).map((x,i)=>`<div class="item"><div><b>${esc(x.name)}</b><div class="muted">${esc(x.room)} • ${esc(x.days)}</div></div><button class="btn" onclick="requestItem(${i})">Request</button></div>`).join("")}
+renderItems();renderTx();updateStats();
+</script>
+</body></html>
