@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HostelShare – Prototype</title>
+<style>
+:root{--navy:#1f3b64;--bg:#f5f7fa;--card:#fff;--muted:#667085;--line:#d8dee8;--ok:#1d7a46}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#172033}
+header{background:var(--navy);color:white;padding:18px 28px;display:flex;justify-content:space-between;align-items:center}
+.brand{font-size:22px;font-weight:700}.tag{font-size:13px;opacity:.9}
+nav{background:#fff;border-bottom:1px solid var(--line);padding:10px 24px;display:flex;gap:8px}
+nav button{border:0;background:#eef3f8;color:var(--navy);padding:9px 14px;border-radius:7px;cursor:pointer;font-weight:600}
+nav button.active{background:var(--navy);color:#fff}
+main{max-width:1100px;margin:24px auto;padding:0 18px}.page{display:none}.page.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.two{grid-template-columns:1.2fr .8fr}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 2px 8px rgba(20,30,50,.04)}
+h1{font-size:25px;margin:0 0 8px}.muted{color:var(--muted);font-size:14px}.stat{font-size:30px;font-weight:700;color:var(--navy);margin-top:10px}
+.item{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding:13px 0}
+.badge{padding:5px 9px;border-radius:12px;background:#e9f6ef;color:var(--ok);font-size:12px;font-weight:700}
+.btn{background:var(--navy);color:#fff;border:0;border-radius:7px;padding:9px 12px;cursor:pointer}
+input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:7px;margin:7px 0 12px}
+label{font-size:13px;font-weight:700}
+.notice{background:#fff8e6;border:1px solid #efd58c;padding:12px;border-radius:8px;margin-top:12px}
+table{width:100%;border-collapse:collapse} th,td{border-bottom:1px solid var(--line);padding:10px;text-align:left;font-size:14px} th{color:var(--navy)}
+.small{font-size:12px}
+</style>
+</head>
+<body>
+<header><div class="brand">HostelShare</div><div class="tag">Smart Peer-to-Peer Borrowing & Resource Management</div></header>
+<nav>
+<button class="active" onclick="showPage('dashboard',this)">Dashboard</button>
+<button onclick="showPage('items',this)">Browse Items</button>
+<button onclick="showPage('request',this)">Post Requirement</button>
+<button onclick="showPage('transactions',this)">Transactions</button>
+</nav>
+<main>
+<section id="dashboard" class="page active">
+<h1>Student Dashboard</h1><p class="muted">Prototype view for hostel resource sharing.</p>
+<div class="grid">
+<div class="card"><div class="muted">Available Items</div><div class="stat" id="itemCount">6</div></div>
+<div class="card"><div class="muted">Active Requests</div><div class="stat">2</div></div>
+<div class="card"><div class="muted">Trust Score</div><div class="stat">4.8/5</div></div>
+</div>
+<div class="card" style="margin-top:16px"><h3>Recommended for you</h3>
+<div class="item"><div><b>Scientific Calculator</b><div class="muted">Room B-204 • 2 days</div></div><button class="btn" onclick="requestItem('Scientific Calculator')">Request</button></div>
+<div class="item"><div><b>Umbrella</b><div class="muted">Room A-118 • 1 day</div></div><button class="btn" onclick="requestItem('Umbrella')">Request</button></div>
+<div class="item"><div><b>USB-C Charger</b><div class="muted">Room C-103 • 3 days</div></div><button class="btn" onclick="requestItem('USB-C Charger')">Request</button></div>
+</div>
+</section>
+
+<section id="items" class="page">
+<h1>Browse & Match Items</h1><p class="muted">Search items posted by verified hostel residents.</p>
+<div class="card">
+<input id="search" placeholder="Search calculator, charger, book..." oninput="filterItems()">
+<div id="itemsList">
+<div class="item"><div><b>Scientific Calculator</b><div class="muted">Electronics • Room B-204 • Owner: Student A</div></div><span class="badge">Available</span></div>
+<div class="item"><div><b>Engineering Drawing Set</b><div class="muted">Academic • Room A-112 • Owner: Student B</div></div><span class="badge">Available</span></div>
+<div class="item"><div><b>USB-C Charger</b><div class="muted">Electronics • Room C-103 • Owner: Student C</div></div><span class="badge">Available</span></div>
+<div class="item"><div><b>Umbrella</b><div class="muted">Utility • Room A-118 • Owner: Student D</div></div><span class="badge">Available</span></div>
+</div></div>
+</section>
+
+<section id="request" class="page">
+<h1>Post Borrow Requirement</h1><p class="muted">Create a requirement and let HostelShare match suitable lenders.</p>
+<div class="card">
+<label>Item required</label><input id="reqItem" placeholder="e.g., Calculator">
+<label>Required duration</label><select id="duration"><option>1 day</option><option>2 days</option><option>3 days</option><option>1 week</option></select>
+<label>Purpose / note</label><input id="purpose" placeholder="e.g., Need for tomorrow's practical">
+<button class="btn" onclick="postRequirement()">Post Requirement</button>
+<div id="reqMsg"></div>
+</div>
+</section>
+
+<section id="transactions" class="page">
+<h1>Transactions & Return Tracking</h1><p class="muted">Track handover, due date and return status.</p>
+<div class="card"><table><thead><tr><th>Item</th><th>Status</th><th>Due Date</th><th>Verification</th></tr></thead>
+<tbody>
+<tr><td>Scientific Calculator</td><td><span class="badge">Borrowed</span></td><td>03 Oct 2026</td><td>QR Handover Verified</td></tr>
+<tr><td>USB-C Charger</td><td><span class="badge">Return Due</span></td><td>01 Oct 2026</td><td>QR Handover Verified</td></tr>
+</tbody></table>
+<div class="notice"><b>Reminder:</b> Return due items through the verified handover process. Late-return notifications are generated automatically.</div>
+</div>
+</section>
+</main>
+<script>
+function showPage(id,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+function requestItem(name){document.getElementById('reqItem').value=name;showPage('request',document.querySelectorAll('nav button')[2])}
+function postRequirement(){let n=document.getElementById('reqItem').value.trim();let m=document.getElementById('reqMsg');if(!n){m.innerHTML='<div class="notice">Please enter an item name.</div>';return}m.innerHTML='<div class="notice">Requirement posted successfully. Smart matching will identify available lenders.</div>'}
+function filterItems(){let q=document.getElementById('search').value.toLowerCase();document.querySelectorAll('#itemsList .item').forEach(x=>x.style.display=x.innerText.toLowerCase().includes(q)?'flex':'none')}
+</script>
+</body></html>
