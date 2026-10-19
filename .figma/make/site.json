@@ -1,0 +1,10 @@
+{
+  "description": "A peer-to-peer platform enabling college hostel students to borrow, share, and manage campus resources with a warm, intuitive, and trustworthy interface.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
