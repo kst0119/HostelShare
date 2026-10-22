@@ -47,11 +47,18 @@ export default function Footer() {
           <Link to="/profile">Community standing</Link>
         </div>
         <div>
+          <b>Account & Access</b>
+          <Link to="/signup">Create account</Link>
+          <Link to="/login">Student log in</Link>
+          <Link to="/forgot-password">Reset password</Link>
+          <Link to="/verification-pending">Verification flow</Link>
+        </div>
+        <div>
           <b>Project Status</b>
           <p
             style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.6)" }}
           >
-            HostelShare Phase 2 (Client-Side Routing & Architecture).
+            HostelShare Phase 4A (Authentication UI & Validation).
             Client-side interactive prototype.
           </p>
         </div>

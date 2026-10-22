@@ -79,15 +79,24 @@ export default function Header() {
             <ThemeToggle />
             <Button
               variant="secondary"
-              onClick={() => {
-                setDialog("auth")
-                setOpen(false)
-              }}
+              to="/login"
+              onClick={() => setOpen(false)}
             >
-              Sign In
+              Log In
             </Button>
-            <Button variant="primary" onClick={() => handleNav("/discover")}>
-              Launch Live Demo <Icon name="arrow" size={16} />
+            <Button
+              variant="primary"
+              to="/signup"
+              onClick={() => setOpen(false)}
+            >
+              Sign Up <Icon name="arrow" size={16} />
+            </Button>
+            <Button
+              variant="amber"
+              onClick={() => handleNav("/discover")}
+              className="demo-nav-btn"
+            >
+              Demo Catalog
             </Button>
             <label
               className="demo-switcher"

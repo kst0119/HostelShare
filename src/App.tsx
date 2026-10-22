@@ -17,6 +17,10 @@ import NotFoundPage from "./pages/NotFoundPage"
 import ProfilePage from "./pages/ProfilePage"
 import RequirementsPage from "./pages/RequirementsPage"
 import TransactionPage from "./pages/TransactionPage"
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage"
+import LoginPage from "./pages/auth/LoginPage"
+import SignUpPage from "./pages/auth/SignUpPage"
+import VerificationPendingPage from "./pages/auth/VerificationPendingPage"
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation()
@@ -62,6 +66,13 @@ export default function App() {
             <Route path="/transactions/:id" element={<TransactionPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/:id" element={<ProfilePage />} />
+            <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route
+              path="/verification-pending"
+              element={<VerificationPendingPage />}
+            />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

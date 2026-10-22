@@ -33,11 +33,14 @@ export default function HomePage() {
           </p>
 
           <div className="hero-cta-group">
-            <Button variant="primary" to="/discover">
-              Explore Shared Items <Icon name="arrow" size={17} />
+            <Button variant="primary" to="/signup">
+              Sign Up <Icon name="arrow" size={17} />
             </Button>
-            <Button variant="secondary" to="/requirements">
-              Requirements Board
+            <Button variant="secondary" to="/login">
+              Log In
+            </Button>
+            <Button variant="dark" to="/discover">
+              Explore Demo Catalog
             </Button>
             <Button
               variant="text"
@@ -434,17 +437,20 @@ export default function HomePage() {
             listings, test borrow requests, or simulate adding your own item.
           </p>
           <div className="banner-buttons">
+            <Button variant="amber" to="/signup">
+              Create Student Account <Icon name="arrow" size={17} />
+            </Button>
+            <Button variant="secondary" to="/login">
+              Log In
+            </Button>
             <Button
-              variant="amber"
+              variant="dark"
               onClick={() => {
                 navigate("/discover")
                 window.scrollTo({ top: 0, behavior: "smooth" })
               }}
             >
-              Launch Live Demo (Explore Items) <Icon name="arrow" size={17} />
-            </Button>
-            <Button variant="secondary" to="/list-item">
-              List an Item <Icon name="plus" size={17} />
+              Explore Live Demo
             </Button>
           </div>
         </div>
