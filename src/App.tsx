@@ -8,6 +8,7 @@ import {
 } from "react-router-dom"
 import Layout from "./components/layout/Layout"
 import AppProvider from "./context/AppContext"
+import AuthProvider from "./context/AuthContext"
 import ActivityPage from "./pages/ActivityPage"
 import DiscoverPage from "./pages/DiscoverPage"
 import HomePage from "./pages/HomePage"
@@ -17,8 +18,10 @@ import NotFoundPage from "./pages/NotFoundPage"
 import ProfilePage from "./pages/ProfilePage"
 import RequirementsPage from "./pages/RequirementsPage"
 import TransactionPage from "./pages/TransactionPage"
+import AuthCallbackPage from "./pages/auth/AuthCallbackPage"
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage"
 import LoginPage from "./pages/auth/LoginPage"
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage"
 import SignUpPage from "./pages/auth/SignUpPage"
 import VerificationPendingPage from "./pages/auth/VerificationPendingPage"
 
@@ -44,39 +47,43 @@ function ScrollToTop() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppProvider>
-        <ScrollToTop />
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/discover" element={<DiscoverPage />} />
-            <Route path="/requirements" element={<RequirementsPage />} />
-            <Route path="/requirements/:id" element={<RequirementsPage />} />
-            <Route path="/items/:id" element={<ItemDetailPage />} />
-            <Route
-              path="/items"
-              element={<Navigate to="/discover" replace />}
-            />
-            <Route path="/list-item" element={<ListItemPage />} />
-            <Route
-              path="/list"
-              element={<Navigate to="/list-item" replace />}
-            />
-            <Route path="/activity" element={<ActivityPage />} />
-            <Route path="/transactions/:id" element={<TransactionPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/profile/:id" element={<ProfilePage />} />
-            <Route path="/signup" element={<SignUpPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route
-              path="/verification-pending"
-              element={<VerificationPendingPage />}
-            />
-            <Route path="*" element={<NotFoundPage />} />
-          </Route>
-        </Routes>
-      </AppProvider>
+      <AuthProvider>
+        <AppProvider>
+          <ScrollToTop />
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/discover" element={<DiscoverPage />} />
+              <Route path="/requirements" element={<RequirementsPage />} />
+              <Route path="/requirements/:id" element={<RequirementsPage />} />
+              <Route path="/items/:id" element={<ItemDetailPage />} />
+              <Route
+                path="/items"
+                element={<Navigate to="/discover" replace />}
+              />
+              <Route path="/list-item" element={<ListItemPage />} />
+              <Route
+                path="/list"
+                element={<Navigate to="/list-item" replace />}
+              />
+              <Route path="/activity" element={<ActivityPage />} />
+              <Route path="/transactions/:id" element={<TransactionPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile/:id" element={<ProfilePage />} />
+              <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/auth/callback" element={<AuthCallbackPage />} />
+              <Route
+                path="/verification-pending"
+                element={<VerificationPendingPage />}
+              />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+          </Routes>
+        </AppProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

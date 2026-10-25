@@ -225,3 +225,34 @@ export function validateForgotPasswordForm(
 ): { isValid: boolean; error?: string } {
   return validateEmail(email, config)
 }
+
+export type ResetPasswordFormData = {
+  password: string
+  confirmPassword: string
+}
+
+export type ResetPasswordErrors = {
+  password?: string
+  confirmPassword?: string
+}
+
+export function validateResetPasswordForm(data: ResetPasswordFormData): {
+  isValid: boolean
+  errors: ResetPasswordErrors
+} {
+  const errors: ResetPasswordErrors = {}
+
+  const passwordResult = validatePassword(data.password)
+  if (!passwordResult.isValid) {
+    errors.password = passwordResult.error
+  }
+
+  if (!data.confirmPassword) {
+    errors.confirmPassword = "Please confirm your new password."
+  } else if (data.password !== data.confirmPassword) {
+    errors.confirmPassword = "Passwords do not match."
+  }
+
+  const isValid = Object.keys(errors).length === 0
+  return { isValid, errors }
+}

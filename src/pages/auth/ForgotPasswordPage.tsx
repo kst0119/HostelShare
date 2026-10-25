@@ -2,18 +2,22 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import Button from "../../components/common/Button"
 import Icon from "../../components/common/Icon"
+import { useAuth } from "../../context/AuthContext"
 import {
   DEFAULT_EMAIL_CONFIG,
   validateForgotPasswordForm,
 } from "../../utils/authValidation"
 
 export default function ForgotPasswordPage() {
+  const { resetPassword, isConfigured, configStatus } = useAuth()
+
   const [email, setEmail] = useState("")
   const [error, setError] = useState<string | undefined>()
+  const [generalError, setGeneralError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [busy, setBusy] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const result = validateForgotPasswordForm(email, DEFAULT_EMAIL_CONFIG)
@@ -23,26 +27,63 @@ export default function ForgotPasswordPage() {
       return
     }
 
-    setBusy(true)
+    if (!isConfigured) {
+      setGeneralError(configStatus.message)
+      return
+    }
 
-    // Phase 4A UI simulation
-    setTimeout(() => {
+    setBusy(true)
+    setGeneralError(null)
+
+    try {
+      const res = await resetPassword(email)
       setBusy(false)
+
+      if (!res.success) {
+        setGeneralError(
+          res.error || "Failed to send reset link. Please check the email address and try again.",
+        )
+        return
+      }
+
       setSubmitted(true)
-    }, 400)
+    } catch (err) {
+      setBusy(false)
+      setGeneralError(
+        err instanceof Error
+          ? err.message
+          : "An unexpected network error occurred. Please try again.",
+      )
+    }
   }
 
   return (
     <main className="page auth-page">
       <div className="auth-card-container">
-        <div className="auth-banner-notice">
-          <Icon name="shield" size={16} />
-          <span>
-            <b>Phase 4A Design Placeholder:</b> Password recovery interface.
-            Secure time-limited reset tokens and email dispatch will be handled
-            by the auth provider in Phase 4B.
-          </span>
-        </div>
+        {!isConfigured ? (
+          <div
+            className="auth-banner-notice"
+            style={{
+              borderColor: "#f59e0b",
+              background: "#fef3c7",
+              color: "#92400e",
+            }}
+          >
+            <Icon name="alert" size={16} />
+            <span>
+              <b>Supabase Setup Required:</b> Password reset requires active Supabase
+              credentials in <code>.env.local</code>.
+            </span>
+          </div>
+        ) : (
+          <div className="auth-banner-notice">
+            <Icon name="shield" size={16} />
+            <span>
+              <b>Secure Password Recovery:</b> A time-limited cryptographic token will
+              be dispatched to your confirmed student email address.
+            </span>
+          </div>
+        )}
 
         <div className="auth-card">
           <div className="auth-header">
@@ -58,21 +99,27 @@ export default function ForgotPasswordPage() {
 
           {submitted ? (
             <div className="auth-preview-feedback" role="status">
-              <div className="preview-feedback-icon">
+              <div
+                className="preview-feedback-icon"
+                style={{
+                  background: "var(--forest-10, #e8f5e9)",
+                  color: "var(--forest, #2e7d32)",
+                }}
+              >
                 <Icon name="mail" size={26} />
               </div>
-              <h3>Reset Link Request Simulated</h3>
+              <h3>Reset Link Dispatched</h3>
               <p>
-                In production (Phase 4B), a password reset link with a
-                time-limited cryptographic token would be dispatched to:
+                Supabase Auth has accepted the reset request. A time-limited
+                password reset link was dispatched to:
               </p>
               <div className="preview-feedback-box">
                 <b>{email.trim()}</b>
               </div>
               <p className="preview-next-steps">
-                Check your student email inbox and spam folder. If you don&apos;t
-                receive an email within a few minutes, ensure your email address
-                was entered correctly.
+                Check your student email inbox and spam folder. Click the link
+                to set a new password. (Note: Email delivery is subject to your
+                Supabase project&apos;s SMTP configuration).
               </p>
               <div className="preview-actions">
                 <Button variant="primary" to="/login" className="wide">
@@ -92,6 +139,26 @@ export default function ForgotPasswordPage() {
             </div>
           ) : (
             <form className="auth-form" onSubmit={handleSubmit} noValidate>
+              {generalError && (
+                <div
+                  style={{
+                    background: "#fee2e2",
+                    color: "#991b1b",
+                    padding: "10px 14px",
+                    borderRadius: "6px",
+                    fontSize: "0.88rem",
+                    marginBottom: "16px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                  role="alert"
+                >
+                  <Icon name="close" size={16} />
+                  <span>{generalError}</span>
+                </div>
+              )}
+
               <div className="form-group">
                 <label htmlFor="email" className="form-label">
                   Student Email Address <span className="required-star">*</span>
@@ -106,6 +173,7 @@ export default function ForgotPasswordPage() {
                     onChange={(e) => {
                       setEmail(e.target.value)
                       if (error) setError(undefined)
+                      if (generalError) setGeneralError(null)
                     }}
                     autoComplete="email"
                     aria-invalid={!!error}
@@ -129,7 +197,7 @@ export default function ForgotPasswordPage() {
                 className="wide auth-submit-btn"
                 disabled={busy}
               >
-                {busy ? "Sending request…" : "Send Reset Link"}
+                {busy ? "Sending reset request…" : "Send Reset Link"}
               </Button>
             </form>
           )}

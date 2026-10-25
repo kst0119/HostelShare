@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useApp } from "../../context/AppContext"
+import { useAuth } from "../../context/AuthContext"
 import Button from "../common/Button"
 import Icon from "../common/Icon"
 import Logo from "./Logo"
@@ -12,7 +13,15 @@ export default function Header() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const { data, currentUser, switchUser, openNotice, setDialog } = useApp()
+  const { data, currentUser, switchUser, openNotice, setDialog, setFlash } = useApp()
+  const { user, signOut } = useAuth()
+
+  const handleSignOut = async () => {
+    await signOut()
+    setFlash({ type: "success", text: "Signed out successfully." })
+    setOpen(false)
+    navigate("/")
+  }
 
   const notices = data.notices.filter(
     (notice) => notice.userId === currentUser.id,
@@ -77,20 +86,46 @@ export default function Header() {
 
           <div className="nav-actions">
             <ThemeToggle />
-            <Button
-              variant="secondary"
-              to="/login"
-              onClick={() => setOpen(false)}
-            >
-              Log In
-            </Button>
-            <Button
-              variant="primary"
-              to="/signup"
-              onClick={() => setOpen(false)}
-            >
-              Sign Up <Icon name="arrow" size={16} />
-            </Button>
+            {user ? (
+              <div
+                className="auth-user-bar"
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <span
+                  style={{
+                    fontSize: "0.85rem",
+                    color: "var(--text-secondary)",
+                    maxWidth: "150px",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                  title={user.email}
+                >
+                  {user.user_metadata?.full_name || user.email}
+                </span>
+                <Button variant="secondary" onClick={handleSignOut}>
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Button
+                  variant="secondary"
+                  to="/login"
+                  onClick={() => setOpen(false)}
+                >
+                  Log In
+                </Button>
+                <Button
+                  variant="primary"
+                  to="/signup"
+                  onClick={() => setOpen(false)}
+                >
+                  Sign Up <Icon name="arrow" size={16} />
+                </Button>
+              </>
+            )}
             <Button
               variant="amber"
               onClick={() => handleNav("/discover")}
@@ -207,6 +242,65 @@ export default function Header() {
               ))}
             </select>
           </label>
+
+          {user ? (
+            <div
+              className="auth-user-bar"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginLeft: "4px",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "0.82rem",
+                  color: "var(--text-secondary)",
+                  maxWidth: "130px",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  background: "var(--surface-sunken, rgba(0,0,0,0.04))",
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                }}
+                title={user.email}
+              >
+                {user.user_metadata?.full_name || user.email}
+              </span>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                style={{
+                  background: "none",
+                  border: "1px solid var(--border)",
+                  borderRadius: "6px",
+                  padding: "5px 10px",
+                  fontSize: "0.82rem",
+                  color: "var(--text-secondary)",
+                  cursor: "pointer",
+                  fontWeight: 500,
+                }}
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              style={{
+                fontSize: "0.88rem",
+                fontWeight: 600,
+                color: "var(--forest)",
+                textDecoration: "none",
+                padding: "6px 12px",
+              }}
+              onClick={() => setOpen(false)}
+            >
+              Log In
+            </Link>
+          )}
         </nav>
       )}
 

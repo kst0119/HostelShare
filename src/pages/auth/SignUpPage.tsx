@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import Button from "../../components/common/Button"
 import Icon from "../../components/common/Icon"
 import PasswordStrengthIndicator from "../../components/auth/PasswordStrengthIndicator"
+import { useAuth } from "../../context/AuthContext"
 import {
   DEFAULT_EMAIL_CONFIG,
   SignUpFormData,
@@ -13,6 +14,7 @@ import {
 
 export default function SignUpPage() {
   const navigate = useNavigate()
+  const { signUp, isConfigured, configStatus } = useAuth()
 
   const [formData, setFormData] = useState<SignUpFormData>({
     fullName: "",
@@ -27,6 +29,7 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [passwordFocused, setPasswordFocused] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [generalError, setGeneralError] = useState<string | null>(null)
 
   const passwordValidation = validatePassword(formData.password)
 
@@ -39,9 +42,12 @@ export default function SignUpPage() {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }))
     }
+    if (generalError) {
+      setGeneralError(null)
+    }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const result = validateSignUpForm(formData, DEFAULT_EMAIL_CONFIG)
@@ -54,28 +60,62 @@ export default function SignUpPage() {
       return
     }
 
-    setBusy(true)
+    if (!isConfigured) {
+      setGeneralError(configStatus.message)
+      return
+    }
 
-    // Phase 4A UI note: No backend authentication or password storage in client state
-    setTimeout(() => {
+    setBusy(true)
+    setGeneralError(null)
+
+    try {
+      const res = await signUp(formData)
       setBusy(false)
+
+      if (!res.success) {
+        setGeneralError(res.error || "Registration failed. Please check your details and try again.")
+        return
+      }
+
       const encodedEmail = encodeURIComponent(formData.email.trim())
       const encodedName = encodeURIComponent(formData.fullName.trim())
-      navigate(`/verification-pending?email=${encodedEmail}&name=${encodedName}`)
-    }, 450)
+
+      if (res.needsEmailConfirmation) {
+        navigate(`/verification-pending?email=${encodedEmail}&name=${encodedName}`)
+      } else {
+        navigate("/discover")
+      }
+    } catch (err) {
+      setBusy(false)
+      setGeneralError(
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred during registration. Please try again.",
+      )
+    }
   }
 
   return (
     <main className="page auth-page">
       <div className="auth-card-container">
-        <div className="auth-banner-notice">
-          <Icon name="shield" size={16} />
-          <span>
-            <b>Phase 4A Preview:</b> Student sign-up form with client-side
-            validation. Real server authentication & email verification connect
-            in Phase 4B.
-          </span>
-        </div>
+        {!isConfigured ? (
+          <div className="auth-banner-notice" style={{ borderColor: "#f59e0b", background: "#fef3c7", color: "#92400e" }}>
+            <Icon name="alert" size={16} />
+            <span>
+              <b>Supabase Setup Required:</b> To register real accounts, configure{" "}
+              <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> in{" "}
+              <code>.env.local</code>. You can also explore the prototype anytime using Demo Mode below.
+            </span>
+          </div>
+        ) : (
+          <div className="auth-banner-notice">
+            <Icon name="shield" size={16} />
+            <span>
+              <b>Secure Campus Registration:</b> Powered by Supabase Auth with encrypted
+              passwords and email verification.
+            </span>
+          </div>
+        )}
 
         <div className="auth-card">
           <div className="auth-header">
@@ -90,6 +130,26 @@ export default function SignUpPage() {
           </div>
 
           <form className="auth-form" onSubmit={handleSubmit} noValidate>
+            {generalError && (
+              <div
+                style={{
+                  background: "#fee2e2",
+                  color: "#991b1b",
+                  padding: "10px 14px",
+                  borderRadius: "6px",
+                  fontSize: "0.88rem",
+                  marginBottom: "16px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+                role="alert"
+              >
+                <Icon name="close" size={16} />
+                <span>{generalError}</span>
+              </div>
+            )}
+
             {/* Full Name */}
             <div className="form-group">
               <label htmlFor="fullName" className="form-label">
