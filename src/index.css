@@ -3946,6 +3946,16 @@ footer a:not(.logo):hover {
   outline-offset: 1px;
 }
 
+/* Suppress duplicate browser-native password reveal button (Edge, IE) so only custom accessible toggle button displays */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 .field-error-text {
   font-size: 0.82rem;
   color: #DC2626;

@@ -83,3 +83,31 @@ export const supabase: SupabaseClient = createClient(
     },
   },
 )
+
+/**
+ * Resolves the authentication redirect URL for email verification, magic links,
+ * and password recovery callbacks.
+ *
+ * Supports:
+ * - Local development: dynamically uses the active browser origin (e.g., http://localhost:8443)
+ * - Custom / Production deployments: reads VITE_SITE_URL or VITE_APP_URL when configured
+ * - Subpath routing: respects import.meta.env.BASE_URL
+ */
+export function getAuthRedirectUrl(path: string = "/auth/callback"): string {
+  const customSiteUrl = (
+    import.meta.env.VITE_SITE_URL ||
+    ""
+  ).trim()
+
+  const origin = customSiteUrl
+    ? customSiteUrl.replace(/\/$/, "")
+    : typeof window !== "undefined" && window.location?.origin
+      ? window.location.origin
+      : "http://localhost:8443"
+
+  const rawBase = (import.meta.env.BASE_URL || "/").trim()
+  const base = rawBase === "/" ? "" : rawBase.replace(/\/$/, "")
+  const cleanPath = path.startsWith("/") ? path : `/${path}`
+
+  return `${origin}${base}${cleanPath}`
+}

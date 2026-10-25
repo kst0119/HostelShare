@@ -29,4 +29,15 @@ describe("Supabase Integration Client", () => {
     expect(typeof supabase.auth.updateUser).toBe("function")
     expect(typeof supabase.auth.resend).toBe("function")
   })
+
+  it("resolves valid authentication redirect URLs for local dev and paths", async () => {
+    const { getAuthRedirectUrl } = await import("./supabase")
+    const url = getAuthRedirectUrl("/auth/callback")
+    expect(typeof url).toBe("string")
+    expect(url).toContain("/auth/callback")
+    expect(url.startsWith("http")).toBe(true)
+
+    const recoveryUrl = getAuthRedirectUrl("/auth/callback?type=recovery")
+    expect(recoveryUrl).toContain("/auth/callback?type=recovery")
+  })
 })

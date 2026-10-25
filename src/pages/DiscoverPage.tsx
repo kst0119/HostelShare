@@ -3,10 +3,19 @@ import Button from "../components/common/Button"
 import Icon from "../components/common/Icon"
 import ItemCard from "../components/items/ItemCard"
 import { useApp } from "../context/AppContext"
+import { useAuth } from "../context/AuthContext"
 import { userFor } from "../store"
 
 export default function DiscoverPage() {
-  const { data, currentUser, toggleSaveItem } = useApp()
+  const {
+    data,
+    currentUser,
+    toggleSaveItem,
+    itemsLoading,
+    itemsError,
+    refreshItems,
+  } = useApp()
+  const { user } = useAuth()
   const [query, setQuery] = useState("")
   const [category, setCategory] = useState("All")
   const [sort, setSort] = useState("Recommended")
@@ -54,13 +63,23 @@ export default function DiscoverPage() {
           <h1>Explore Shared Items</h1>
           <p>Browsing campus resources available in your hostel community.</p>
         </div>
-        <div className="demo-banner">
-          <Icon name="user" />
-          <span>
-            <b>Demo Mode Active</b>
-            Browsing as {currentUser.name} ({currentUser.hostel})
-          </span>
-        </div>
+        {user ? (
+          <div className="demo-banner live-banner">
+            <Icon name="shield" />
+            <span>
+              <b>Live Database Active</b>
+              Signed in as {currentUser.name} ({currentUser.hostel})
+            </span>
+          </div>
+        ) : (
+          <div className="demo-banner">
+            <Icon name="user" />
+            <span>
+              <b>Demo Mode Active</b>
+              Browsing as {currentUser.name} ({currentUser.hostel})
+            </span>
+          </div>
+        )}
       </section>
 
       <section className="search-wrap">
@@ -114,7 +133,64 @@ export default function DiscoverPage() {
         </label>
       </div>
 
-      {filtered.length ? (
+      {itemsLoading ? (
+        <div className="empty" style={{ margin: "40px auto" }}>
+          <span className="empty-orbit">
+            <Icon name="box" size={32} />
+          </span>
+          <h2>Loading items…</h2>
+          <p>Connecting to the campus inventory database.</p>
+        </div>
+      ) : itemsError ? (
+        <div className="empty" style={{ margin: "40px auto" }}>
+          <span
+            className="empty-orbit"
+            style={{ color: "var(--red, #e53e3e)" }}
+          >
+            <Icon name="close" size={28} />
+          </span>
+          <span
+            className="eyebrow"
+            style={{ color: "var(--red, #e53e3e)" }}
+          >
+            Database Error
+          </span>
+          <h2>Unable to load shared items</h2>
+          <p>{itemsError}</p>
+          <div style={{ marginTop: 14 }}>
+            <Button variant="secondary" onClick={refreshItems}>
+              Retry Connection
+            </Button>
+          </div>
+        </div>
+      ) : data.items.length === 0 ? (
+        <div className="empty" style={{ margin: "40px auto" }}>
+          <span className="empty-orbit">
+            <Icon name="box" size={32} />
+          </span>
+          <span className="eyebrow">Empty Catalog</span>
+          <h2>No items listed yet</h2>
+          <p>
+            No listings found in the campus database yet. Be the first to share
+            an item with your hostel!
+          </p>
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              justifyContent: "center",
+              marginTop: 16,
+            }}
+          >
+            <Button to="/list-item">
+              <Icon name="plus" size={16} /> List an item
+            </Button>
+            <Button variant="secondary" onClick={refreshItems}>
+              Refresh
+            </Button>
+          </div>
+        </div>
+      ) : filtered.length ? (
         <div className="editorial-grid">
           {filtered.map((item, index) => (
             <ItemCard
@@ -151,3 +227,4 @@ export default function DiscoverPage() {
     </main>
   )
 }
+

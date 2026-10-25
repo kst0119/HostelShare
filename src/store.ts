@@ -582,6 +582,73 @@ export function createItem(
   }
 }
 
+export function updateItem(
+  data: AppData,
+  itemId: string,
+  actorId: string,
+  updates: Partial<Omit<Item, "id" | "ownerId">>,
+): Result {
+  const item = data.items.find((candidate) => candidate.id === itemId)
+  if (!item) return { ok: false, error: "Item not found." }
+  if (item.ownerId !== actorId)
+    return { ok: false, error: "Only the owner can edit this listing." }
+
+  if (updates.name !== undefined && updates.name.trim().length < 2)
+    return { ok: false, error: "Add a clear name of at least 2 characters." }
+
+  if (updates.description !== undefined && updates.description.trim().length < 10)
+    return { ok: false, error: "Description must be at least 10 characters." }
+
+  const fromDate = updates.availableFrom ?? item.availableFrom
+  const untilDate = updates.availableUntil ?? item.availableUntil
+  if (fromDate > untilDate)
+    return { ok: false, error: "Availability end date must be on or after the start date." }
+
+  const updatedItem: Item = {
+    ...item,
+    ...updates,
+    name: updates.name ? updates.name.trim() : item.name,
+    description: updates.description ? updates.description.trim() : item.description,
+  }
+
+  const items = data.items.map((candidate) =>
+    candidate.id === itemId ? updatedItem : candidate,
+  )
+
+  return {
+    ok: true,
+    data: { ...data, items },
+    message: `${updatedItem.name} updated.`,
+  }
+}
+
+export function deleteItem(
+  data: AppData,
+  itemId: string,
+  actorId: string,
+): Result {
+  const item = data.items.find((candidate) => candidate.id === itemId)
+  if (!item) return { ok: false, error: "Item not found." }
+  if (item.ownerId !== actorId)
+    return { ok: false, error: "Only the owner can delete this listing." }
+
+  const hasRequests = data.requests.some((r) => r.itemId === itemId)
+  if (hasRequests)
+    return {
+      ok: false,
+      error: "Cannot delete item: it has associated borrow requests or history.",
+    }
+
+  const items = data.items.filter((candidate) => candidate.id !== itemId)
+  const savedItemIds = data.savedItemIds.filter((id) => id !== itemId)
+
+  return {
+    ok: true,
+    data: { ...data, items, savedItemIds },
+    message: `${item.name} removed from listings.`,
+  }
+}
+
 export function createBorrowRequest(
   data: AppData,
   input: Omit<BorrowRequest, "id" | "status" | "createdAt" | "ownerId">,

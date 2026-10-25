@@ -12,6 +12,7 @@ export default function ListItemPage() {
   const [step, setStep] = useState(1)
   const [error, setError] = useState("")
   const [done, setDone] = useState("")
+  const [busy, setBusy] = useState(false)
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -56,20 +57,28 @@ export default function ListItemPage() {
     reader.readAsDataURL(file)
   }
 
-  const publish = (event: FormEvent) => {
+  const publish = async (event: FormEvent) => {
     event.preventDefault()
-    const result = createItemListing({
-      name: form.name.trim(),
-      description: form.description.trim(),
-      category: form.category,
-      condition: form.condition,
-      image: form.image,
-      ownerId: currentUser.id,
-      availableFrom: form.from,
-      availableUntil: form.until,
-    })
-    if (!result.ok) return setError(result.error)
-    setDone(form.name)
+    setBusy(true)
+    setError("")
+    try {
+      const result = await createItemListing({
+        name: form.name.trim(),
+        description: form.description.trim(),
+        category: form.category,
+        condition: form.condition,
+        image: form.image,
+        ownerId: currentUser.id,
+        availableFrom: form.from,
+        availableUntil: form.until,
+      })
+      setBusy(false)
+      if (!result.ok) return setError(result.error || "Failed to publish listing.")
+      setDone(form.name)
+    } catch (err) {
+      setBusy(false)
+      setError(err instanceof Error ? err.message : "Failed to publish listing.")
+    }
   }
 
   if (done) {
@@ -81,7 +90,7 @@ export default function ListItemPage() {
         <span className="eyebrow">Listing Published</span>
         <h1>{done} is now available!</h1>
         <p>
-          Your item is saved in local storage and is now visible in the Explore
+          Your item is published and is now visible in the Explore
           catalogue and on your profile.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
@@ -282,8 +291,14 @@ export default function ListItemPage() {
               Continue <Icon name="arrow" size={16} />
             </Button>
           ) : (
-            <Button type="submit">
-              Publish Listing <Icon name="check" size={16} />
+            <Button type="submit" disabled={busy}>
+              {busy ? (
+                "Publishing listing…"
+              ) : (
+                <>
+                  Publish Listing <Icon name="check" size={16} />
+                </>
+              )}
             </Button>
           )}
         </div>

@@ -17,9 +17,6 @@ export default function AuthCallbackPage() {
   const processedRef = useRef(false)
 
   useEffect(() => {
-    if (processedRef.current) return
-    processedRef.current = true
-
     if (!isSupabaseConfigured) {
       setStatus("error")
       setErrorMessage(
@@ -28,14 +25,47 @@ export default function AuthCallbackPage() {
       return
     }
 
+    // Helper to extract param from query string or hash fragment
+    const getParam = (key: string): string | null => {
+      const fromQuery = searchParams.get(key)
+      if (fromQuery) return fromQuery
+      if (typeof window !== "undefined" && window.location.hash) {
+        const rawHash = window.location.hash.replace(/^#/, "")
+        const hashParams = new URLSearchParams(rawHash)
+        return hashParams.get(key)
+      }
+      return null
+    }
+
+    const type = getParam("type")
+    const isRecovery =
+      type === "recovery" ||
+      (typeof window !== "undefined" &&
+        window.location.hash.includes("type=recovery")) ||
+      searchParams.get("next")?.includes("reset-password")
+
+    // Listen to auth state changes (essential for implicit token hash fragments)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+      if (currentSession) {
+        if (isRecovery) {
+          setStatus("recovery")
+          navigate("/reset-password", { replace: true })
+        } else {
+          setStatus("success")
+        }
+      }
+    })
+
     const processAuthCallback = async () => {
       try {
-        const code = searchParams.get("code")
-        const tokenHash = searchParams.get("token_hash")
-        const type = searchParams.get("type")
-        const errorDescription = searchParams.get("error_description")
+        const code = getParam("code")
+        const tokenHash = getParam("token_hash")
+        const errorDescription =
+          getParam("error_description") || getParam("error")
 
-        // Provider reported error via query param
+        // Provider reported error via query param or hash
         if (errorDescription) {
           setStatus("error")
           setErrorMessage(errorDescription)
@@ -55,7 +85,7 @@ export default function AuthCallbackPage() {
             return
           }
 
-          if (type === "recovery" || searchParams.get("next")?.includes("reset-password")) {
+          if (isRecovery) {
             setStatus("recovery")
             navigate("/reset-password", { replace: true })
             return
@@ -68,10 +98,15 @@ export default function AuthCallbackPage() {
         }
 
         // Case 2: Token hash / OTP verification
-        if (tokenHash && type) {
+        if (tokenHash) {
+          const otpType = (type || "email") as
+            | "signup"
+            | "email"
+            | "recovery"
+            | "invite"
           const { data, error } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
-            type: type as "signup" | "email" | "recovery" | "invite",
+            type: otpType,
           })
 
           if (error) {
@@ -84,7 +119,7 @@ export default function AuthCallbackPage() {
             return
           }
 
-          if (type === "recovery") {
+          if (isRecovery || otpType === "recovery") {
             setStatus("recovery")
             navigate("/reset-password", { replace: true })
             return
@@ -96,18 +131,7 @@ export default function AuthCallbackPage() {
           }
         }
 
-        // Case 3: Implicit hash flow (hash fragments parsed by Supabase client) or recovery param
-        if (window.location.hash.includes("type=recovery") || type === "recovery") {
-          // Check if session established for recovery
-          const { data } = await supabase.auth.getSession()
-          if (data.session) {
-            setStatus("recovery")
-            navigate("/reset-password", { replace: true })
-            return
-          }
-        }
-
-        // Case 4: Verify existing active session on page refresh or hash processing
+        // Case 3: Implicit hash flow session check
         const { data: sessionData, error: sessionError } =
           await supabase.auth.getSession()
 
@@ -118,11 +142,24 @@ export default function AuthCallbackPage() {
         }
 
         if (sessionData.session) {
+          if (isRecovery) {
+            setStatus("recovery")
+            navigate("/reset-password", { replace: true })
+            return
+          }
           setStatus("success")
           return
         }
 
-        // Case 5: Direct navigation with no auth parameters
+        // If access_token is in hash, keep in processing state while onAuthStateChange completes
+        if (
+          typeof window !== "undefined" &&
+          window.location.hash.includes("access_token")
+        ) {
+          return
+        }
+
+        // Case 4: No params or session found
         setStatus("error")
         setErrorMessage(
           "No valid verification code or active session was detected in the URL. If you already verified, please log in.",
@@ -138,6 +175,10 @@ export default function AuthCallbackPage() {
     }
 
     processAuthCallback()
+
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [searchParams, navigate])
 
   return (

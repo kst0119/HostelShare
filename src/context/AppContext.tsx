@@ -1,6 +1,7 @@
 import {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -20,6 +21,7 @@ import {
   CURRENT_USER_KEY,
   decideRequest,
   decideRequirementOffer,
+  deleteItem,
   fulfillRequirement,
   initiateReturn,
   Item,
@@ -31,9 +33,19 @@ import {
   saveData,
   STORAGE_KEY,
   toggleSaved,
+  updateItem,
   User,
   userFor,
 } from "../store"
+import { useAuth } from "./AuthContext"
+import { supabase } from "../lib/supabase"
+import {
+  createSupabaseItem,
+  deleteSupabaseItem,
+  fetchSupabaseItems,
+  profileToUser,
+  updateSupabaseItem,
+} from "../lib/itemService"
 
 export type Theme = "light" | "dark"
 export const THEME_KEY = "hostelshare-theme"
@@ -82,7 +94,17 @@ export type AppContextType = {
   toggleSaveItem: (itemId: string) => void
   updateProfile: (user: User) => void
   resetDemoData: () => void
-  createItemListing: (item: Omit<Item, "id" | "availabilityStatus">) => Result
+  itemsLoading: boolean
+  itemsError: string | null
+  refreshItems: () => Promise<void>
+  createItemListing: (
+    item: Omit<Item, "id" | "availabilityStatus">,
+  ) => Promise<Result<Item>>
+  updateItemListing: (
+    itemId: string,
+    updates: Partial<Omit<Item, "id" | "ownerId">>,
+  ) => Promise<Result<Item>>
+  deleteItemListing: (itemId: string) => Promise<Result>
   submitBorrowRequest: (input: {
     itemId: string
     borrowerId: string
@@ -133,10 +155,13 @@ export function useApp(): AppContextType {
 
 export default function AppProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
+  const { user, isConfigured } = useAuth()
   const [data, setData] = useState<AppData>(() => loadData())
   const [currentUserId, setCurrentUserId] = useState(
     () => localStorage.getItem(CURRENT_USER_KEY) || "user-aisha",
   )
+  const [itemsLoading, setItemsLoading] = useState<boolean>(false)
+  const [itemsError, setItemsError] = useState<string | null>(null)
   const [flash, setFlash] = useState<Flash>(null)
   const [dialog, setDialog] = useState<Dialog>(null)
   const [theme, setTheme] = useState<Theme>(() => getInitialTheme())
@@ -162,17 +187,24 @@ export default function AppProvider({ children }: { children: ReactNode }) {
   const currentUser = useMemo(() => {
     return userFor(
       data,
-      data.users.some((user) => user.id === currentUserId)
+      data.users.some((u) => u.id === currentUserId)
         ? currentUserId
         : data.users[0]?.id || "user-aisha",
     )
   }, [data, currentUserId])
 
-  useEffect(() => saveData(data), [data])
+  // Only persist demo state to localStorage when unauthenticated
+  useEffect(() => {
+    if (!user) {
+      saveData(data)
+    }
+  }, [data, user])
 
   useEffect(() => {
-    localStorage.setItem(CURRENT_USER_KEY, currentUser.id)
-  }, [currentUser.id])
+    if (!user) {
+      localStorage.setItem(CURRENT_USER_KEY, currentUser.id)
+    }
+  }, [currentUser.id, user])
 
   useEffect(() => {
     if (!flash) return
@@ -181,6 +213,93 @@ export default function AppProvider({ children }: { children: ReactNode }) {
   }, [flash])
 
   const dismissFlash = () => setFlash(null)
+
+  const refreshItems = useCallback(async () => {
+    if (!user || !isConfigured) return
+    setItemsLoading(true)
+    setItemsError(null)
+    const { items: fetchedItems, users: fetchedUsers, error } =
+      await fetchSupabaseItems(supabase)
+
+    if (error) {
+      setItemsError(error)
+      setItemsLoading(false)
+      return
+    }
+
+    setData((current) => {
+      const mergedUsers = [...current.users]
+      for (const u of fetchedUsers) {
+        const idx = mergedUsers.findIndex((x) => x.id === u.id)
+        if (idx >= 0) {
+          mergedUsers[idx] = { ...mergedUsers[idx], ...u }
+        } else {
+          mergedUsers.push(u)
+        }
+      }
+      return {
+        ...current,
+        items: fetchedItems,
+        users: mergedUsers,
+      }
+    })
+    setItemsLoading(false)
+  }, [user, isConfigured])
+
+  // Sync profile and live items when authenticated user changes
+  useEffect(() => {
+    if (user && isConfigured) {
+      // 1. Fetch user's community profile
+      supabase
+        .from("profiles")
+        .select("id, name, hostel, avatar_url, bio, rating")
+        .eq("id", user.id)
+        .maybeSingle()
+        .then(({ data: profile }) => {
+          const authUser: User = {
+            id: user.id,
+            name:
+              profile?.name ||
+              user.user_metadata?.full_name ||
+              user.email?.split("@")[0] ||
+              "Student Resident",
+            hostel: profile?.hostel || "Maple House",
+            roomNumber: "—",
+            avatar:
+              profile?.avatar_url ||
+              (user.user_metadata?.full_name || user.email || "SR")
+                .trim()
+                .split(/\s+/)
+                .map((w: string) => w[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase(),
+            rating:
+              typeof profile?.rating === "number" ? profile.rating : 5.0,
+            bio: profile?.bio || "",
+          }
+
+          setData((current) => {
+            const users = current.users.some((u) => u.id === authUser.id)
+              ? current.users.map((u) => (u.id === authUser.id ? authUser : u))
+              : [authUser, ...current.users]
+            return { ...current, users }
+          })
+          setCurrentUserId(user.id)
+        })
+
+      // 2. Fetch community listings
+      refreshItems()
+    } else {
+      // Revert to demo dataset on sign out
+      const fresh = loadData()
+      setData(fresh)
+      const savedUser = localStorage.getItem(CURRENT_USER_KEY) || "user-aisha"
+      setCurrentUserId(savedUser)
+      setItemsError(null)
+      setItemsLoading(false)
+    }
+  }, [user, isConfigured, refreshItems])
 
   const apply = (result: Result, successPath?: string) => {
     if (!result.ok) {
@@ -259,13 +378,119 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     navigate("/")
   }
 
-  const createItemListing = (item: Omit<Item, "id" | "availabilityStatus">) => {
-    const result = createItem(data, item)
-    if (result.ok) {
-      setData(result.data)
-      setFlash({ type: "success", text: result.message })
+  const createItemListing = async (
+    item: Omit<Item, "id" | "availabilityStatus">,
+  ): Promise<Result<Item>> => {
+    if (user && isConfigured) {
+      setItemsLoading(true)
+      const res = await createSupabaseItem(supabase, item, user.id)
+      setItemsLoading(false)
+      if (!res.ok || !res.data) {
+        setFlash({
+          type: "error",
+          text: res.error || "Failed to publish listing.",
+        })
+        return {
+          ok: false,
+          error: res.error || "Failed to publish listing.",
+        }
+      }
+      const newItem = res.data
+      setData((current) => ({
+        ...current,
+        items: [newItem, ...current.items.filter((i) => i.id !== newItem.id)],
+      }))
+      setFlash({
+        type: "success",
+        text: res.message || `${newItem.name} is now listed.`,
+      })
+      return {
+        ok: true,
+        data: newItem,
+        message: res.message || `${newItem.name} is now listed.`,
+      }
+    } else {
+      const result = createItem(data, item)
+      if (result.ok) {
+        setData(result.data)
+        setFlash({ type: "success", text: result.message })
+        const createdItem = result.data.items[0]
+        return { ok: true, data: createdItem, message: result.message }
+      }
+      return result as Result<Item>
     }
-    return result
+  }
+
+  const updateItemListing = async (
+    itemId: string,
+    updates: Partial<Omit<Item, "id" | "ownerId">>,
+  ): Promise<Result<Item>> => {
+    if (user && isConfigured) {
+      const res = await updateSupabaseItem(supabase, itemId, updates)
+      if (!res.ok || !res.data) {
+        setFlash({
+          type: "error",
+          text: res.error || "Failed to update listing.",
+        })
+        return {
+          ok: false,
+          error: res.error || "Failed to update listing.",
+        }
+      }
+      const updated = res.data
+      setData((current) => ({
+        ...current,
+        items: current.items.map((i) => (i.id === itemId ? updated : i)),
+      }))
+      setFlash({
+        type: "success",
+        text: res.message || `${updated.name} updated.`,
+      })
+      return {
+        ok: true,
+        data: updated,
+        message: res.message || `${updated.name} updated.`,
+      }
+    } else {
+      const result = updateItem(data, itemId, currentUser.id, updates)
+      if (result.ok) {
+        setData(result.data)
+        setFlash({ type: "success", text: result.message })
+        const updated = result.data.items.find((i) => i.id === itemId)!
+        return { ok: true, data: updated, message: result.message }
+      }
+      return result as Result<Item>
+    }
+  }
+
+  const deleteItemListing = async (itemId: string): Promise<Result> => {
+    if (user && isConfigured) {
+      const res = await deleteSupabaseItem(supabase, itemId)
+      if (!res.ok) {
+        setFlash({
+          type: "error",
+          text: res.error || "Failed to delete listing.",
+        })
+        return {
+          ok: false,
+          error: res.error || "Failed to delete listing.",
+        }
+      }
+      setData((current) => ({
+        ...current,
+        items: current.items.filter((i) => i.id !== itemId),
+        savedItemIds: current.savedItemIds.filter((id) => id !== itemId),
+      }))
+      setFlash({ type: "success", text: res.message || "Listing removed." })
+      return { ok: true, data: data, message: res.message || "Listing removed." }
+    } else {
+      const result = deleteItem(data, itemId, currentUser.id)
+      if (result.ok) {
+        setData(result.data)
+        setFlash({ type: "success", text: result.message })
+      }
+      return result
+    }
   }
 
   const submitBorrowRequest = (input: {
@@ -381,7 +606,12 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     toggleSaveItem,
     updateProfile,
     resetDemoData,
+    itemsLoading,
+    itemsError,
+    refreshItems,
     createItemListing,
+    updateItemListing,
+    deleteItemListing,
     submitBorrowRequest,
     decideBorrowRequest,
     postRequirement,

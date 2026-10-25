@@ -8,6 +8,7 @@ import {
 } from "react"
 import { Session, User as SupabaseUser } from "@supabase/supabase-js"
 import {
+  getAuthRedirectUrl,
   getSupabaseConfigStatus,
   isSupabaseConfigured,
   supabase,
@@ -119,7 +120,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
           data: {
             full_name: data.fullName.trim(),
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: getAuthRedirectUrl("/auth/callback"),
         },
       })
 
@@ -263,7 +264,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.resetPasswordForEmail(
         email.trim(),
         {
-          redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+          redirectTo: getAuthRedirectUrl("/auth/callback?type=recovery"),
         },
       )
 
@@ -341,7 +342,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         type: "signup",
         email: email.trim(),
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: getAuthRedirectUrl("/auth/callback"),
         },
       })
 
