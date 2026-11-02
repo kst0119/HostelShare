@@ -176,20 +176,30 @@ export type Result<T = AppData> =
 const photos = {
   calculator:
     "https://images.unsplash.com/photo-1685038955804-3de172e7ff35?auto=format&fit=crop&w=1200&q=85",
-
   headphones:
     "https://images.unsplash.com/photo-1511377107391-116a9d5d20b5?auto=format&fit=crop&w=1200&q=85",
-
   books:
     "https://images.unsplash.com/photo-1517090823101-30a5937ceb3c?auto=format&fit=crop&w=1200&q=85",
-
-  desk: "https://images.unsplash.com/photo-1428223501723-d821c5d00ca3?auto=format&fit=crop&w=1200&q=85",
-
+  desk:
+    "https://images.unsplash.com/photo-1428223501723-d821c5d00ca3?auto=format&fit=crop&w=1200&q=85",
   mouse:
     "https://images.unsplash.com/photo-1668035626412-420df3662985?auto=format&fit=crop&w=1200&q=85",
-
   study:
     "https://images.unsplash.com/photo-1701453031437-b8e2d3f5dd9d?auto=format&fit=crop&w=1200&q=85",
+  badminton:
+    "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=85",
+  cricket:
+    "https://images.unsplash.com/photo-1531415074868-036b1c57e329?auto=format&fit=crop&w=1200&q=85",
+  iron:
+    "https://images.unsplash.com/photo-1588854337236-6889d631faa8?auto=format&fit=crop&w=1200&q=85",
+  kettle:
+    "https://images.unsplash.com/photo-1594213114663-ddf4f240f08d?auto=format&fit=crop&w=1200&q=85",
+  tools:
+    "https://images.unsplash.com/photo-1581147036324-c17ac41dfa6c?auto=format&fit=crop&w=1200&q=85",
+  drafting:
+    "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=1200&q=85",
+  adapter:
+    "https://images.unsplash.com/photo-1625842268584-8f3296236761?auto=format&fit=crop&w=1200&q=85",
 }
 
 export const STORAGE_KEY = "hostelshare-data-v4"
@@ -199,11 +209,8 @@ export const CURRENT_USER_KEY = "hostelshare-demo-user-v1"
 
 export function dateOffset(days: number) {
   const date = new Date()
-
   date.setHours(12, 0, 0, 0)
-
   date.setDate(date.getDate() + days)
-
   return date.toISOString().slice(0, 10)
 }
 
@@ -215,196 +222,527 @@ export function createSeedData(): AppData {
       hostel: "Maple House",
       roomNumber: "218",
       avatar: "AS",
-      rating: 4.9,
-      bio: "Product design student, serial note-sharer, and the person with a charger for everything.",
+      rating: 4.95,
+      bio: "3rd year Product Design & Computing. Badminton enthusiast, notes sharer, and the person with a spare charger or adapter for every laptop.",
     },
-
-    {
-      id: "user-mira",
-      name: "Mira Nair",
-      hostel: "Maple House",
-      roomNumber: "214",
-      avatar: "MN",
-      rating: 4.8,
-      bio: "Economics student and careful keeper of useful things.",
-    },
-
     {
       id: "user-kabir",
       name: "Kabir Shah",
       hostel: "Cedar Hall",
       roomNumber: "108",
       avatar: "KS",
-      rating: 4.7,
-      bio: "Music, electronics, and always happy to help.",
+      rating: 4.88,
+      bio: "Electronics & Robotics senior. Weekend guitarist, lab equipment keeper, and always happy to lend presentation gear or calculators.",
+    },
+    {
+      id: "user-mira",
+      name: "Mira Nair",
+      hostel: "Maple House",
+      roomNumber: "214",
+      avatar: "MN",
+      rating: 4.9,
+      bio: "Economics & Finance sophomore. Careful keeper of reference textbooks, exam stationery, and clean hostel appliances.",
+    },
+    {
+      id: "user-rohan",
+      name: "Rohan Verma",
+      hostel: "Banyan Block",
+      roomNumber: "305",
+      avatar: "RV",
+      rating: 4.75,
+      bio: "CSE 3rd year. Coding late, playing LAN tournaments on weekends, and hoarding extra Ethernet cables, monitor dongles, and hotplates.",
+    },
+    {
+      id: "user-ananya",
+      name: "Ananya Sharma",
+      hostel: "Cedar Hall",
+      roomNumber: "112",
+      avatar: "AS",
+      rating: 5.0,
+      bio: "Architecture & Urban Planning sophomore. Has an extensive drafting tool collection, cutting mats, steam iron, and keeps things tidy.",
+    },
+    {
+      id: "user-arjun",
+      name: "Arjun Patel",
+      hostel: "Ashoka Hostel",
+      roomNumber: "402",
+      avatar: "AP",
+      rating: 4.85,
+      bio: "Mechanical Engineering senior. Hostel cricket captain, DIY fix-it person with a 24-piece toolkit and football gear.",
     },
   ]
 
   const items: Item[] = [
     {
       id: "item-calculator",
-      name: "Casio scientific calculator",
+      name: "Casio FX-991CW ClassWiz Scientific Calculator",
       category: "Study",
       condition: "Like new",
       ownerId: "user-mira",
       availabilityStatus: "available",
       image: photos.calculator,
       description:
-        "Reliable FX-991ES Plus with a fresh battery. Perfect for exam week or lab calculations.",
+        "Natural textbook display, solar + battery, permitted in all university examinations. Includes slide-on protective case.",
+      availableFrom: dateOffset(0),
+      availableUntil: dateOffset(45),
+    },
+    {
+      id: "item-math-book",
+      name: "Higher Engineering Mathematics (B.S. Grewal, 44th Edition)",
+      category: "Study",
+      condition: "Good",
+      ownerId: "user-arjun",
+      availabilityStatus: "available",
+      image: photos.books,
+      description:
+        "Standard reference for Calculus, Linear Algebra, and Differential Equations. Neatly highlighted with formula summary sheets tucked in.",
+      availableFrom: dateOffset(0),
+      availableUntil: dateOffset(60),
+    },
+    {
+      id: "item-drafting-kit",
+      name: "Architecture A2 Drafting Board & T-Square Kit",
+      category: "Study",
+      condition: "Great",
+      ownerId: "user-ananya",
+      availabilityStatus: "available",
+      image: photos.drafting,
+      description:
+        "Parallel-motion A2 drawing board with acrylic drafting ruler and 45°/60° set squares. Essential for engineering drawing and studio reviews.",
       availableFrom: dateOffset(0),
       availableUntil: dateOffset(30),
     },
-
+    {
+      id: "item-gate-book",
+      name: "GATE CSE Handbook & Topicwise Solved Papers",
+      category: "Study",
+      condition: "Great",
+      ownerId: "user-rohan",
+      availabilityStatus: "reserved",
+      image: photos.study,
+      description:
+        "Complete formula sheets, algorithm quick-reference cards, and 15 years of topicwise solved papers for computer science engineering.",
+      availableFrom: dateOffset(-1),
+      availableUntil: dateOffset(30),
+    },
     {
       id: "item-headphones",
-      name: "Noise-cancelling headphones",
+      name: "Sony WH-1000XM4 Noise-Cancelling Headphones",
       category: "Electronics",
-      condition: "Good",
+      condition: "Like new",
       ownerId: "user-kabir",
       availabilityStatus: "available",
       image: photos.headphones,
       description:
-        "Comfortable over-ear headphones with a wired connection and travel pouch.",
+        "Industry-leading active noise cancellation. Perfect for exam crunch in the library or noisy hostel corridors. Includes 3.5mm aux cable and hard case.",
       availableFrom: dateOffset(0),
       availableUntil: dateOffset(20),
     },
-
-    {
-      id: "item-books",
-      name: "Introduction to economics set",
-      category: "Study",
-      condition: "Loved",
-      ownerId: "user-aisha",
-      availabilityStatus: "available",
-      image: photos.books,
-      description:
-        "Core reading plus tidy semester notes tucked inside. Please keep them dry.",
-      availableFrom: dateOffset(0),
-      availableUntil: dateOffset(45),
-    },
-
     {
       id: "item-kit",
-      name: "Laptop presentation kit",
+      name: "Laptop Presentation Kit (Stand, HDMI Cable & Clicker)",
       category: "Electronics",
       condition: "Great",
       ownerId: "user-kabir",
       availabilityStatus: "borrowed",
       image: photos.desk,
       description:
-        "Laptop stand, HDMI adapter and wireless presenter for seminar days.",
-      availableFrom: dateOffset(4),
-      availableUntil: dateOffset(40),
+        "Adjustable aluminum laptop riser, 3m braided 4K HDMI cable, and Logitech wireless presentation clicker with laser pointer.",
+      availableFrom: dateOffset(-2),
+      availableUntil: dateOffset(30),
     },
-
     {
       id: "item-mouse",
-      name: "Wireless mouse",
+      name: "Logitech MX Master 3S Ergonomic Wireless Mouse",
       category: "Electronics",
       condition: "Like new",
       ownerId: "user-mira",
       availabilityStatus: "available",
       image: photos.mouse,
-      description: "Compact Bluetooth mouse, silent click, charged and ready.",
+      description:
+        "Quiet electromagnetic scroll wheel, connects via Bluetooth or Logi Bolt receiver. 70-day battery on full charge.",
+      availableFrom: dateOffset(0),
+      availableUntil: dateOffset(30),
+    },
+    {
+      id: "item-hub",
+      name: "Anker 7-in-1 USB-C Hub (4K HDMI, SD & 100W PD)",
+      category: "Electronics",
+      condition: "Great",
+      ownerId: "user-rohan",
+      availabilityStatus: "available",
+      image: photos.adapter,
+      description:
+        "Multiport adapter dongle for MacBooks and Type-C laptops. Features 4K@60Hz HDMI, 2x USB 3.0, SD/MicroSD slots, and 100W passthrough charging.",
       availableFrom: dateOffset(0),
       availableUntil: dateOffset(25),
     },
-
     {
-      id: "item-stationery",
-      name: "Exam survival stationery",
-      category: "Other",
-      condition: "New",
+      id: "item-badminton",
+      name: "Yonex Nanoray 70 Light Badminton Racquets (Pair)",
+      category: "Sports",
+      condition: "Great",
       ownerId: "user-aisha",
       availabilityStatus: "available",
-      image: photos.study,
+      image: photos.badminton,
       description:
-        "Calculator, pouch, ruler and the little bits you always forget.",
+        "Lightweight 77g graphite racquets strung at 26 lbs. Comes with a double padded thermal racquet cover and a tube of Mavis 350 nylon shuttles.",
       availableFrom: dateOffset(0),
-      availableUntil: dateOffset(18),
+      availableUntil: dateOffset(40),
+    },
+    {
+      id: "item-cricket-bat",
+      name: "SS Ton Kashmir Willow Tennis Ball Cricket Bat",
+      category: "Sports",
+      condition: "Good",
+      ownerId: "user-kabir",
+      availabilityStatus: "reserved",
+      image: photos.cricket,
+      description:
+        "Light pickup, thick edges, full cane handle with chevron grip. Perfect for inter-hostel gully cricket and campus turf tournaments.",
+      availableFrom: dateOffset(-1),
+      availableUntil: dateOffset(20),
+    },
+    {
+      id: "item-iron",
+      name: "Philips Handheld Garment Steamer & Travel Iron",
+      category: "Everyday",
+      condition: "Like new",
+      ownerId: "user-mira",
+      availabilityStatus: "available",
+      image: photos.iron,
+      description:
+        "Continuous steam up to 20g/min, safe on all fabrics from formals to blazers. Quick 35-second heat-up with 70ml detachable water tank.",
+      availableFrom: dateOffset(0),
+      availableUntil: dateOffset(35),
+    },
+    {
+      id: "item-cooktop",
+      name: "Pigeon Cruise Induction Cooktop with Stainless Steel Pot",
+      category: "Everyday",
+      condition: "Good",
+      ownerId: "user-rohan",
+      availabilityStatus: "borrowed",
+      image: photos.kettle,
+      description:
+        "1800W induction plate with 7 Indian preset menus and auto-shutoff safety. Comes with compatible 2.5L steel pot and lid for late-night Maggi and chai.",
+      availableFrom: dateOffset(-3),
+      availableUntil: dateOffset(15),
+    },
+    {
+      id: "item-tools",
+      name: "Stanley 24-Piece Multi-Bit Screwdriver & Precision Tool Kit",
+      category: "Other",
+      condition: "Great",
+      ownerId: "user-arjun",
+      availabilityStatus: "available",
+      image: photos.tools,
+      description:
+        "Compact ratchet screwdriver handle with magnetic extension and 24 hardened chrome vanadium bits for electronics, desks, and dorm repairs.",
+      availableFrom: dateOffset(0),
+      availableUntil: dateOffset(50),
     },
   ]
 
   const requests: BorrowRequest[] = [
     {
-      id: "request-seed-active",
+      id: "request-pending-incoming-aisha",
+      itemId: "item-badminton",
+      borrowerId: "user-rohan",
+      ownerId: "user-aisha",
+      requestedFrom: dateOffset(0),
+      requestedUntil: dateOffset(1),
+      message:
+        "Hey Aisha! Banyan wing is playing a friendly doubles match against Cedar this evening at 6:30 PM. Could I borrow your Yonex racquets for a couple of hours? Will return right after!",
+      status: "pending",
+      createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+    },
+    {
+      id: "request-pending-outgoing-aisha",
+      itemId: "item-drafting-kit",
+      borrowerId: "user-aisha",
+      ownerId: "user-ananya",
+      requestedFrom: dateOffset(2),
+      requestedUntil: dateOffset(4),
+      message:
+        "Hi Ananya! We have our studio design jury review this Thursday. Would love to borrow your drafting board for preliminary layout mounting.",
+      status: "pending",
+      createdAt: new Date(Date.now() - 3600000 * 6).toISOString(),
+    },
+    {
+      id: "request-approved-cricket",
+      itemId: "item-cricket-bat",
+      borrowerId: "user-arjun",
+      ownerId: "user-kabir",
+      requestedFrom: dateOffset(0),
+      requestedUntil: dateOffset(2),
+      message:
+        "Kabir, need your SS Ton bat for the Ashoka vs Banyan match tomorrow morning. Will return Sunday evening.",
+      status: "approved",
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+    },
+    {
+      id: "request-borrowed-kit",
       itemId: "item-kit",
       borrowerId: "user-aisha",
       ownerId: "user-kabir",
-      requestedFrom: dateOffset(-1),
+      requestedFrom: dateOffset(-2),
       requestedUntil: dateOffset(2),
-      message: "For my studio presentation.",
+      message:
+        "Need the presentation clicker and HDMI cable for my design portfolio review in the main auditorium.",
+      status: "approved",
+      createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+    },
+    {
+      id: "request-borrowed-cooktop",
+      itemId: "item-cooktop",
+      borrowerId: "user-kabir",
+      ownerId: "user-rohan",
+      requestedFrom: dateOffset(-3),
+      requestedUntil: dateOffset(1),
+      message:
+        "Making chai and soup during hackathon prep tonight with the Cedar team. Will wash and return tomorrow.",
+      status: "approved",
+      createdAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+    },
+    {
+      id: "request-return-pending-iron",
+      itemId: "item-iron",
+      borrowerId: "user-ananya",
+      ownerId: "user-mira",
+      requestedFrom: dateOffset(-2),
+      requestedUntil: dateOffset(0),
+      message:
+        "Need to press my formal blazer for placement orientation tomorrow. Will handle with care!",
       status: "approved",
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
     },
-
     {
-      id: "request-seed-history",
+      id: "request-returned-headphones",
       itemId: "item-headphones",
       borrowerId: "user-mira",
       ownerId: "user-kabir",
       requestedFrom: dateOffset(-12),
-      requestedUntil: dateOffset(-10),
-      message: "For a library session.",
+      requestedUntil: dateOffset(-9),
+      message:
+        "Need silent focus in the library for econometric model submissions. Will keep inside case.",
       status: "approved",
       createdAt: new Date(Date.now() - 86400000 * 14).toISOString(),
+    },
+    {
+      id: "request-returned-tools",
+      itemId: "item-tools",
+      borrowerId: "user-aisha",
+      ownerId: "user-arjun",
+      requestedFrom: dateOffset(-8),
+      requestedUntil: dateOffset(-6),
+      message:
+        "Need screwdriver set to assemble my desk shelf and fix my table lamp.",
+      status: "approved",
+      createdAt: new Date(Date.now() - 86400000 * 9).toISOString(),
+    },
+    {
+      id: "request-rejected-hub",
+      itemId: "item-hub",
+      borrowerId: "user-arjun",
+      ownerId: "user-rohan",
+      requestedFrom: dateOffset(-5),
+      requestedUntil: dateOffset(-4),
+      message: "Need the hub for connecting an external backup disk.",
+      status: "rejected",
+      createdAt: new Date(Date.now() - 86400000 * 6).toISOString(),
+    },
+    {
+      id: "request-cancelled-calc",
+      itemId: "item-calculator",
+      borrowerId: "user-rohan",
+      ownerId: "user-mira",
+      requestedFrom: dateOffset(-4),
+      requestedUntil: dateOffset(-2),
+      message:
+        "Found a wing mate with a spare calculator, cancelling so others can use it. Thanks Mira!",
+      status: "cancelled",
+      createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
     },
   ]
 
   const transactions: Transaction[] = [
     {
-      id: "transaction-seed-active",
-      requestId: "request-seed-active",
+      id: "transaction-approved-cricket",
+      requestId: "request-approved-cricket",
+      itemId: "item-cricket-bat",
+      borrowerId: "user-arjun",
+      ownerId: "user-kabir",
+      status: "approved",
+      handoverAt: null,
+      dueAt: dateOffset(2),
+      returnedAt: null,
+    },
+    {
+      id: "transaction-borrowed-kit",
+      requestId: "request-borrowed-kit",
       itemId: "item-kit",
       borrowerId: "user-aisha",
       ownerId: "user-kabir",
       status: "borrowed",
-      handoverAt: new Date(Date.now() - 86400000).toISOString(),
+      handoverAt: new Date(Date.now() - 86400000 * 2).toISOString(),
       dueAt: dateOffset(2),
       returnedAt: null,
     },
-
     {
-      id: "transaction-seed-history",
-      requestId: "request-seed-history",
+      id: "transaction-borrowed-cooktop",
+      requestId: "request-borrowed-cooktop",
+      itemId: "item-cooktop",
+      borrowerId: "user-kabir",
+      ownerId: "user-rohan",
+      status: "borrowed",
+      handoverAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+      dueAt: dateOffset(1),
+      returnedAt: null,
+    },
+    {
+      id: "transaction-return-pending-iron",
+      requestId: "request-return-pending-iron",
+      itemId: "item-iron",
+      borrowerId: "user-ananya",
+      ownerId: "user-mira",
+      status: "return_pending",
+      handoverAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      dueAt: dateOffset(0),
+      returnedAt: null,
+    },
+    {
+      id: "transaction-returned-headphones",
+      requestId: "request-returned-headphones",
       itemId: "item-headphones",
       borrowerId: "user-mira",
       ownerId: "user-kabir",
       status: "returned",
       handoverAt: new Date(Date.now() - 86400000 * 12).toISOString(),
-      dueAt: dateOffset(-10),
-      returnedAt: new Date(Date.now() - 86400000 * 10).toISOString(),
+      dueAt: dateOffset(-9),
+      returnedAt: new Date(Date.now() - 86400000 * 9).toISOString(),
+    },
+    {
+      id: "transaction-returned-tools",
+      requestId: "request-returned-tools",
+      itemId: "item-tools",
+      borrowerId: "user-aisha",
+      ownerId: "user-arjun",
+      status: "returned",
+      handoverAt: new Date(Date.now() - 86400000 * 8).toISOString(),
+      dueAt: dateOffset(-6),
+      returnedAt: new Date(Date.now() - 86400000 * 6).toISOString(),
+    },
+  ]
+
+  const reviews: Review[] = [
+    {
+      id: "review-headphones-by-mira",
+      transactionId: "transaction-returned-headphones",
+      reviewerId: "user-mira",
+      recipientId: "user-kabir",
+      rating: 5,
+      comment:
+        "Kabir handed over the Sony XM4s with full battery, clean earcups, and the audio cable. The noise cancelling saved my econometrics revision. Highly recommended lender!",
+      createdAt: new Date(Date.now() - 86400000 * 9).toISOString(),
+    },
+    {
+      id: "review-headphones-by-kabir",
+      transactionId: "transaction-returned-headphones",
+      reviewerId: "user-kabir",
+      recipientId: "user-mira",
+      rating: 5,
+      comment:
+        "Mira returned the headphones right on time at the Cedar lounge, neatly packed in the case. Super responsible borrower!",
+      createdAt: new Date(Date.now() - 86400000 * 9).toISOString(),
+    },
+    {
+      id: "review-tools-by-aisha",
+      transactionId: "transaction-returned-tools",
+      reviewerId: "user-aisha",
+      recipientId: "user-arjun",
+      rating: 5,
+      comment:
+        "Arjun's Stanley toolkit had every single bit needed to assemble my drafting table and fix my desk lamp. Great person to have on campus!",
+      createdAt: new Date(Date.now() - 86400000 * 6).toISOString(),
+    },
+    {
+      id: "review-tools-by-arjun",
+      transactionId: "transaction-returned-tools",
+      reviewerId: "user-arjun",
+      recipientId: "user-aisha",
+      rating: 5,
+      comment:
+        "Aisha returned the kit with all 24 bits in their slots and wiped down. 10/10 trustworthy hostel mate.",
+      createdAt: new Date(Date.now() - 86400000 * 6).toISOString(),
+    },
+  ]
+
+  const notices: Notice[] = [
+    {
+      id: "notice-incoming-badminton",
+      userId: "user-aisha",
+      text: "Rohan Verma submitted a borrow request for your Yonex badminton racquets.",
+      target: "activity",
+      read: false,
+      createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+    },
+    {
+      id: "notice-due-presentation-kit",
+      userId: "user-aisha",
+      text: "Laptop presentation kit borrowed from Kabir is due back in 2 days.",
+      target: "transaction",
+      transactionId: "transaction-borrowed-kit",
+      read: false,
+      createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+    },
+    {
+      id: "notice-review-arjun-aisha",
+      userId: "user-aisha",
+      text: "Arjun Patel left you a 5-star review for the Precision Tool Kit exchange.",
+      target: "profile",
+      read: true,
+      createdAt: new Date(Date.now() - 86400000 * 6).toISOString(),
+    },
+    {
+      id: "notice-req-offer-aisha",
+      userId: "user-aisha",
+      text: "Rohan Verma offered an item for your requirement: Long Cat6 Ethernet cable.",
+      target: "requirements",
+      requirementId: "req-seed-cable",
+      read: false,
+      createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
+    },
+    {
+      id: "notice-kabir-handover",
+      userId: "user-kabir",
+      text: "Arjun Patel's request for SS Ton Cricket Bat was approved. Handover is ready.",
+      target: "transaction",
+      transactionId: "transaction-approved-cricket",
+      read: false,
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+    },
+    {
+      id: "notice-mira-return-confirm",
+      userId: "user-mira",
+      text: "Ananya Sharma initiated the return for Philips Garment Steamer. Please confirm receipt.",
+      target: "transaction",
+      transactionId: "transaction-return-pending-iron",
+      read: false,
+      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
     },
   ]
 
   return {
     version: 4,
-
     users,
-
     items,
-
     requests,
-
     transactions,
-
-    notices: [
-      {
-        id: "notice-seed",
-        userId: "user-aisha",
-        text: "Laptop presentation kit is due soon.",
-        target: "transaction",
-        transactionId: "transaction-seed-active",
-        read: false,
-        createdAt: new Date().toISOString(),
-      },
-    ],
-
-    savedItemIds: [],
-
+    notices,
+    savedItemIds: ["item-calculator", "item-headphones"],
     requirements: createSeedRequirements(),
-
-    reviews: [],
+    reviews,
   }
 }
 
@@ -412,9 +750,9 @@ export function createSeedRequirements(): Requirement[] {
   return [
     {
       id: "req-seed-calculator",
-      title: "TI-84 or Casio graphing calculator for EE 201",
+      title: "Casio FX-991CW or 991ES Plus for Electrical Circuits (EE201) midterm",
       description:
-        "Need a graphing or scientific calculator for the electrical circuits midterm on Friday. Will return right after the exam in Maple lobby.",
+        "Need a scientific calculator for the electrical circuits midterm on Friday. Will return right after the exam in Maple lobby.",
       category: "Study",
       authorId: "user-kabir",
       neededBy: dateOffset(2),
@@ -425,9 +763,9 @@ export function createSeedRequirements(): Requirement[] {
         {
           id: "offer-seed-1",
           requirementId: "req-seed-calculator",
-          offeredById: "user-aisha",
+          offeredById: "user-mira",
           message:
-            "I have my Casio FX-991ES Plus ready to lend! Fresh batteries and can meet at the Maple 2nd floor lounge.",
+            "I have my Casio FX-991CW ClassWiz ready to lend! Fresh batteries and can meet at the Maple lobby.",
           itemId: "item-calculator",
           itemName: "Casio scientific calculator",
           status: "pending",
@@ -437,22 +775,34 @@ export function createSeedRequirements(): Requirement[] {
     },
     {
       id: "req-seed-cable",
-      title: "Long Ethernet cable (Cat6, 5m+) for LAN tournament",
+      title: "Long Cat6 Ethernet Cable (5m+) for LAN tournament",
       description:
-        "The Wi-Fi in Maple 2nd floor gets spotty during weekend gaming tournaments. Looking for a Cat6 RJ-45 cable to plug directly into the wall port.",
+        "The Wi-Fi in Maple 2nd floor gets spotty during weekend tournaments. Looking for a Cat6 RJ-45 cable to plug directly into the wall port.",
       category: "Electronics",
       authorId: "user-aisha",
       neededBy: dateOffset(3),
       returnDate: dateOffset(5),
       status: "open",
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-      offers: [],
+      offers: [
+        {
+          id: "offer-seed-cable",
+          requirementId: "req-seed-cable",
+          offeredById: "user-rohan",
+          message:
+            "I have a 10m Cat6 blue patch cord! Can drop it off at Maple reception on my way to Banyan.",
+          itemId: "item-hub",
+          itemName: "Cat6 Ethernet cable",
+          status: "pending",
+          createdAt: new Date(Date.now() - 3600000 * 8).toISOString(),
+        },
+      ],
     },
     {
       id: "req-seed-badminton",
-      title: "Badminton racquets pair for Saturday doubles",
+      title: "Badminton racquets pair for Saturday evening doubles",
       description:
-        "Planning a morning doubles game at the campus sports complex this Saturday. Need two racquets with tight strings and good grips.",
+        "Planning a friendly doubles game at the campus sports complex this Saturday. Need two racquets with tight strings and good grips.",
       category: "Sports",
       authorId: "user-mira",
       neededBy: dateOffset(4),
@@ -462,12 +812,25 @@ export function createSeedRequirements(): Requirement[] {
       offers: [],
     },
     {
+      id: "req-seed-drafting",
+      title: "T-Square or A2 Drafting ruler for studio presentation",
+      description:
+        "Final design jury review coming up. Need a 60cm or 80cm clear acrylic T-square ruler for architectural board mounting.",
+      category: "Study",
+      authorId: "user-rohan",
+      neededBy: dateOffset(2),
+      returnDate: dateOffset(3),
+      status: "open",
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      offers: [],
+    },
+    {
       id: "req-seed-adapter",
-      title: "USB-C to HDMI adapter dongle",
+      title: "USB-C Multiport Display Adapter for Project Presentation",
       description:
         "Needed a multi-port display adapter for seminar presentation in Block C projector room.",
       category: "Electronics",
-      authorId: "user-kabir",
+      authorId: "user-arjun",
       neededBy: dateOffset(-4),
       returnDate: dateOffset(-2),
       status: "fulfilled",
@@ -476,9 +839,10 @@ export function createSeedRequirements(): Requirement[] {
         {
           id: "offer-seed-fulfilled",
           requirementId: "req-seed-adapter",
-          offeredById: "user-mira",
-          message: "Brought my Multi-port adapter to Cedar lounge.",
-          itemName: "USB-C Multi-port adapter",
+          offeredById: "user-rohan",
+          message: "Brought my Anker 7-in-1 USB-C Hub to Cedar lounge.",
+          itemId: "item-hub",
+          itemName: "Anker USB-C Multi-Port Hub",
           status: "accepted",
           createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
         },
@@ -495,7 +859,9 @@ function isValidData(value: unknown): value is AppData {
   return (
     (data.version === 4 || data.version === 3) &&
     Array.isArray(data.users) &&
+    data.users.length > 0 &&
     Array.isArray(data.items) &&
+    data.items.length > 0 &&
     Array.isArray(data.requests) &&
     Array.isArray(data.transactions)
   )
@@ -511,6 +877,10 @@ export function loadData(): AppData {
         return {
           ...parsed,
           version: 4,
+          notices: Array.isArray(parsed.notices) ? parsed.notices : [],
+          savedItemIds: Array.isArray(parsed.savedItemIds)
+            ? parsed.savedItemIds
+            : [],
           requirements: Array.isArray(parsed.requirements)
             ? parsed.requirements
             : createSeedRequirements(),
@@ -527,6 +897,10 @@ export function loadData(): AppData {
         const migrated: AppData = {
           ...parsed,
           version: 4,
+          notices: Array.isArray(parsed.notices) ? parsed.notices : [],
+          savedItemIds: Array.isArray(parsed.savedItemIds)
+            ? parsed.savedItemIds
+            : [],
           requirements: Array.isArray(parsed.requirements)
             ? parsed.requirements
             : createSeedRequirements(),
@@ -537,9 +911,13 @@ export function loadData(): AppData {
       }
     }
 
-    return createSeedData()
+    const fresh = createSeedData()
+    saveData(fresh)
+    return fresh
   } catch {
-    return createSeedData()
+    const fresh = createSeedData()
+    saveData(fresh)
+    return fresh
   }
 }
 

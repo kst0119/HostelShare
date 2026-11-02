@@ -30,6 +30,14 @@ export default function DiscoverPage() {
     "Other",
   ]
 
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: data.items.length }
+    for (const item of data.items) {
+      counts[item.category] = (counts[item.category] || 0) + 1
+    }
+    return counts
+  }, [data.items])
+
   const filtered = useMemo(() => {
     const result = data.items.filter(
       (item) =>
@@ -49,8 +57,10 @@ export default function DiscoverPage() {
     )
   }, [data, query, category, sort, availableOnly])
 
+  const hasActiveFilters = category !== "All" || availableOnly || query.trim().length > 0
+
   return (
-    <main className="page">
+    <main className="page discover-page">
       <section className="discover-head">
         <div>
           <span className="eyebrow">
@@ -61,50 +71,75 @@ export default function DiscoverPage() {
             })}
           </span>
           <h1>Explore Shared Items</h1>
-          <p>Browsing campus resources available in your hostel community.</p>
+          <p>
+            Browse, borrow, and share resources within your campus hostel community.
+          </p>
         </div>
-        {user ? (
-          <div className="demo-banner live-banner">
-            <Icon name="shield" />
-            <span>
-              <b>Live Database Active</b>
-              Signed in as {currentUser.name} ({currentUser.hostel})
-            </span>
-          </div>
-        ) : (
-          <div className="demo-banner">
-            <Icon name="user" />
-            <span>
-              <b>Demo Mode Active</b>
-              Browsing as {currentUser.name} ({currentUser.hostel})
-            </span>
-          </div>
-        )}
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          {user ? (
+            <div className="demo-banner live-banner">
+              <Icon name="shield" />
+              <span>
+                <b>Live Database Active</b>
+                {currentUser.name} ({currentUser.hostel})
+              </span>
+            </div>
+          ) : (
+            <div className="demo-banner">
+              <Icon name="user" />
+              <span>
+                <b>Demo Persona</b>
+                {currentUser.name} ({currentUser.hostel})
+              </span>
+            </div>
+          )}
+          <Button variant="primary" to="/list-item">
+            <Icon name="plus" size={16} /> List an item
+          </Button>
+        </div>
       </section>
 
       <section className="search-wrap">
-        <Icon name="search" size={22} />
+        <Icon name="search" size={20} />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search calculators, chargers, textbooks, adapters…"
+          placeholder="Search calculators, headphones, sports kits, adapters by title, notes, or owner…"
           aria-label="Search items"
         />
-        <kbd>Live Filter</kbd>
+        {query ? (
+          <button
+            type="button"
+            className="search-clear-btn"
+            onClick={() => setQuery("")}
+            aria-label="Clear search text"
+            title="Clear search text"
+          >
+            <Icon name="close" size={15} />
+          </button>
+        ) : (
+          <kbd>Live Filter</kbd>
+        )}
       </section>
 
       <div className="filter-line">
-        <div className="category-row">
-          {categories.map((name) => (
-            <button
-              type="button"
-              key={name}
-              className={category === name ? "selected" : ""}
-              onClick={() => setCategory(name)}
-            >
-              {name}
-            </button>
-          ))}
+        <div className="category-row" role="tablist" aria-label="Item category filters">
+          {categories.map((name) => {
+            const count = categoryCounts[name] || 0
+            return (
+              <button
+                type="button"
+                key={name}
+                className={category === name ? "selected" : ""}
+                onClick={() => setCategory(name)}
+                role="tab"
+                aria-selected={category === name}
+              >
+                <span>{name}</span>
+                <span className="pill-count">{count}</span>
+              </button>
+            )
+          })}
         </div>
         <label className="check-control">
           <input
@@ -112,19 +147,35 @@ export default function DiscoverPage() {
             checked={availableOnly}
             onChange={(event) => setAvailableOnly(event.target.checked)}
           />
-          Available only
+          <span>Available only</span>
         </label>
       </div>
 
       <div className="results-bar">
-        <p>
-          <b>{filtered.length} things</b> found near {currentUser.hostel}
-        </p>
-        <label>
-          Sort by{" "}
+        <div className="results-count-wrap">
+          <p>
+            <b>{filtered.length} {filtered.length === 1 ? "item" : "items"}</b> available across campus
+          </p>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              className="text-reset-link"
+              onClick={() => {
+                setQuery("")
+                setCategory("All")
+                setAvailableOnly(false)
+              }}
+            >
+              Reset filters
+            </button>
+          )}
+        </div>
+        <label className="sort-control">
+          <span>Sort by</span>
           <select
             value={sort}
             onChange={(event) => setSort(event.target.value)}
+            aria-label="Sort catalog results"
           >
             <option>Recommended</option>
             <option>Available first</option>

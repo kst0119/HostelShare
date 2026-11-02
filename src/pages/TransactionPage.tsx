@@ -17,12 +17,35 @@ import {
 
 export default function TransactionPage() {
   const { id } = useParams<{ id: string }>()
-  const { data, currentUser, mutateTransaction } = useApp()
+  const { data, currentUser, mutateTransaction, transactionsLoading } = useApp()
   const [verified, setVerified] = useState(false)
+  const [mutating, setMutating] = useState(false)
 
   const transaction = data.transactions.find((candidate) => candidate.id === id)
 
+  const handleAction = async (action: "handover" | "initiate-return" | "confirm-return") => {
+    if (!transaction) return
+    setMutating(true)
+    await mutateTransaction(action, transaction.id)
+    setMutating(false)
+  }
+
   if (!transaction) {
+    if (transactionsLoading) {
+      return (
+        <main className="page">
+          <div className="empty" style={{ margin: "60px auto", maxWidth: 540 }}>
+            <span className="empty-orbit">
+              <Icon name="refresh" size={32} />
+            </span>
+            <span className="eyebrow" style={{ color: "var(--forest)" }}>
+              Loading Exchange
+            </span>
+            <h2>Retrieving transaction details…</h2>
+          </div>
+        </main>
+      )
+    }
     return (
       <main className="page">
         <div className="empty" style={{ margin: "60px auto", maxWidth: 540 }}>
@@ -290,9 +313,10 @@ export default function TransactionPage() {
               <Button
                 variant="amber"
                 className="wide"
-                onClick={() => mutateTransaction("handover", transaction.id)}
+                disabled={mutating}
+                onClick={() => handleAction("handover")}
               >
-                Confirm handover
+                {mutating ? "Confirming handover…" : "Confirm handover"}
               </Button>
             </div>
           )}
@@ -300,17 +324,19 @@ export default function TransactionPage() {
           {transaction.status === "borrowed" && (
             <div className="verified-box">
               <p>
-                Initiating a return signals the lender that you are ready to
-                hand back the item.
+                {isBorrower
+                  ? "When you're ready to hand back the item, tap below to notify the lender."
+                  : isOwner
+                    ? `Item is currently with ${borrower.name}. Waiting for them to initiate return.`
+                    : "Initiating a return signals the lender that you are ready to hand back the item."}
               </p>
               <Button
                 variant="amber"
                 className="wide"
-                onClick={() =>
-                  mutateTransaction("initiate-return", transaction.id)
-                }
+                disabled={mutating}
+                onClick={() => handleAction("initiate-return")}
               >
-                Start return process
+                {mutating ? "Starting return…" : "Start return process"}
               </Button>
             </div>
           )}
@@ -318,17 +344,19 @@ export default function TransactionPage() {
           {transaction.status === "return_pending" && (
             <div className="verified-box">
               <p>
-                Confirm only after the physical item has been returned and
-                checked.
+                {isOwner
+                  ? "Confirm only after you have physically received and inspected the item."
+                  : isBorrower
+                    ? `Return initiated! Awaiting final receipt confirmation from ${owner.name}.`
+                    : "Confirm only after the physical item has been returned and checked."}
               </p>
               <Button
                 variant="amber"
                 className="wide"
-                onClick={() =>
-                  mutateTransaction("confirm-return", transaction.id)
-                }
+                disabled={mutating}
+                onClick={() => handleAction("confirm-return")}
               >
-                Confirm item received back
+                {mutating ? "Confirming return…" : "Confirm item received back"}
               </Button>
             </div>
           )}

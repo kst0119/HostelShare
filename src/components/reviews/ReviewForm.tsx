@@ -96,7 +96,7 @@ export default function ReviewForm({
   const recipientRole = isBorrower ? "Lender" : "Borrower"
   const currentUserRole = isBorrower ? "Borrower" : "Lender"
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
@@ -119,7 +119,7 @@ export default function ReviewForm({
     }
 
     setBusy(true)
-    const result = submitReview({
+    const result = await submitReview({
       transactionId: transaction.id,
       rating,
       comment: trimmed,

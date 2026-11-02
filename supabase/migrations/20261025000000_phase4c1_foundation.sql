@@ -21,6 +21,8 @@
 --       DO NOT apply automatically to production without administrative review.
 -- ==============================================================================
 
+BEGIN;
+
 -- ------------------------------------------------------------------------------
 -- 1. PROFILES TABLE (Public Campus Directory — Linked 1-to-1 with auth.users)
 -- ------------------------------------------------------------------------------
@@ -452,12 +454,14 @@ ALTER TABLE public.borrow_requests ENABLE ROW LEVEL SECURITY;
 -- Anonymous visitors cannot view student profiles.
 -- ----------------------------------------------------
 
+DROP POLICY IF EXISTS "Profiles readable by authenticated residents" ON public.profiles;
 CREATE POLICY "Profiles readable by authenticated residents"
 ON public.profiles
 FOR SELECT
 TO authenticated
 USING (true);
 
+DROP POLICY IF EXISTS "Residents can update own profile" ON public.profiles;
 CREATE POLICY "Residents can update own profile"
 ON public.profiles
 FOR UPDATE
@@ -471,12 +475,14 @@ WITH CHECK (auth.uid() = id);
 -- Accessible only by self or active exchange counterpart with approved request.
 -- ----------------------------------------------------
 
+DROP POLICY IF EXISTS "Private details readable by self or active exchange partner" ON public.profile_private;
 CREATE POLICY "Private details readable by self or active exchange partner"
 ON public.profile_private
 FOR SELECT
 TO authenticated
 USING (public.can_view_profile_private(id));
 
+DROP POLICY IF EXISTS "Residents can update own private details" ON public.profile_private;
 CREATE POLICY "Residents can update own private details"
 ON public.profile_private
 FOR UPDATE
@@ -490,18 +496,21 @@ WITH CHECK (auth.uid() = id);
 -- Mutations strictly require verified ownership.
 -- ----------------------------------------------------
 
+DROP POLICY IF EXISTS "Items readable by authenticated residents" ON public.items;
 CREATE POLICY "Items readable by authenticated residents"
 ON public.items
 FOR SELECT
 TO authenticated
 USING (true);
 
+DROP POLICY IF EXISTS "Residents can create own item listings" ON public.items;
 CREATE POLICY "Residents can create own item listings"
 ON public.items
 FOR INSERT
 TO authenticated
 WITH CHECK (auth.uid() = owner_id);
 
+DROP POLICY IF EXISTS "Residents can update own item listings" ON public.items;
 CREATE POLICY "Residents can update own item listings"
 ON public.items
 FOR UPDATE
@@ -509,6 +518,7 @@ TO authenticated
 USING (auth.uid() = owner_id)
 WITH CHECK (auth.uid() = owner_id);
 
+DROP POLICY IF EXISTS "Residents can delete own item listings" ON public.items;
 CREATE POLICY "Residents can delete own item listings"
 ON public.items
 FOR DELETE
@@ -520,18 +530,21 @@ USING (auth.uid() = owner_id);
 -- Confidentiality Rule: Only the borrower and the owner can see the request.
 -- ----------------------------------------------------
 
+DROP POLICY IF EXISTS "Borrow requests readable by borrower or owner" ON public.borrow_requests;
 CREATE POLICY "Borrow requests readable by borrower or owner"
 ON public.borrow_requests
 FOR SELECT
 TO authenticated
 USING (auth.uid() = borrower_id OR auth.uid() = owner_id);
 
+DROP POLICY IF EXISTS "Borrowers can create borrow requests" ON public.borrow_requests;
 CREATE POLICY "Borrowers can create borrow requests"
 ON public.borrow_requests
 FOR INSERT
 TO authenticated
 WITH CHECK (auth.uid() = borrower_id AND borrower_id != owner_id);
 
+DROP POLICY IF EXISTS "Borrowers can cancel own pending requests" ON public.borrow_requests;
 CREATE POLICY "Borrowers can cancel own pending requests"
 ON public.borrow_requests
 FOR UPDATE
@@ -539,6 +552,7 @@ TO authenticated
 USING (auth.uid() = borrower_id AND status = 'pending')
 WITH CHECK (auth.uid() = borrower_id AND status = 'cancelled');
 
+DROP POLICY IF EXISTS "Owners can decide pending requests" ON public.borrow_requests;
 CREATE POLICY "Owners can decide pending requests"
 ON public.borrow_requests
 FOR UPDATE
@@ -568,6 +582,8 @@ GRANT SELECT, UPDATE ON public.profiles TO authenticated;
 GRANT SELECT, UPDATE ON public.profile_private TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.items TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON public.borrow_requests TO authenticated;
+
+COMMIT;
 
 -- ==============================================================================
 -- End of Migration: 20261025000000_phase4c1_foundation.sql

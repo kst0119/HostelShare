@@ -38,8 +38,11 @@ export default function ProfilePage() {
         </div>
         <div>
           <span className="eyebrow">
-            {profileUser.hostel} · Room {profileUser.roomNumber} · Verified
-            Resident
+            {profileUser.hostel} ·{" "}
+            {isOwnProfile || (profileUser.roomNumber && profileUser.roomNumber !== "—")
+              ? `Room ${profileUser.roomNumber}`
+              : "Room Private (Shared on Handover)"}{" "}
+            · Verified Resident
           </span>
           <h1>{profileUser.name}</h1>
           <p>{profileUser.bio}</p>

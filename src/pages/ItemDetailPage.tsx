@@ -1,9 +1,10 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import Button from "../components/common/Button"
 import Icon from "../components/common/Icon"
 import Status from "../components/common/Status"
 import { useApp } from "../context/AppContext"
+import { useAuth } from "../context/AuthContext"
 import {
   AvailabilityStatus,
   Category,
@@ -24,6 +25,7 @@ export default function ItemDetailPage() {
     deleteItemListing,
     itemsLoading,
   } = useApp()
+  const { user, isConfigured } = useAuth()
 
   const item = data.items.find((candidate) => candidate.id === id)
 
@@ -33,6 +35,17 @@ export default function ItemDetailPage() {
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
+
+  const loanDays = useMemo(() => {
+    try {
+      const d1 = new Date(from).getTime()
+      const d2 = new Date(until).getTime()
+      const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24))
+      return Math.max(diff, 0)
+    } catch {
+      return 1
+    }
+  }, [from, until])
 
   // Owner listing management state
   const [isEditing, setIsEditing] = useState(false)
@@ -106,10 +119,17 @@ export default function ItemDetailPage() {
   const ownItem = item.ownerId === currentUser.id
   const ownerStats = getUserRatingStats(data, owner.id)
 
-  const send = () => {
+  const pendingRequest = data.requests.find(
+    (candidate) =>
+      candidate.itemId === item.id &&
+      candidate.borrowerId === currentUser.id &&
+      candidate.status === "pending",
+  )
+
+  const send = async () => {
     setBusy(true)
     setError("")
-    const result = submitBorrowRequest({
+    const result = await submitBorrowRequest({
       itemId: item.id,
       borrowerId: currentUser.id,
       requestedFrom: from,
@@ -117,7 +137,10 @@ export default function ItemDetailPage() {
       message: message.trim(),
     })
     setBusy(false)
-    if (!result.ok) return setError(result.error)
+    if (!result.ok) {
+      setError(result.error || "Failed to submit request.")
+      return
+    }
     setDone(true)
   }
 
@@ -171,8 +194,9 @@ export default function ItemDetailPage() {
         <span className="eyebrow">Request Submitted</span>
         <h1>Sent to {owner.name.split(" ")[0]}</h1>
         <p>
-          Your request has been stored in local demo state. Switch to{" "}
-          {owner.name} in the top-right demo menu to approve or decline it.
+          {user && isConfigured
+            ? `Your borrow request was sent to ${owner.name}. You can track its status in My Activity.`
+            : `Your request has been stored in local demo state. Switch to ${owner.name} in the top-right demo menu to approve or decline it.`}
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
           <Button to="/activity">
@@ -324,6 +348,17 @@ export default function ItemDetailPage() {
                 </label>
               </div>
 
+              <div style={{ marginBottom: 14 }}>
+                <span className="loan-duration-pill">
+                  <Icon name="clock" size={13} />{" "}
+                  {loanDays === 0
+                    ? "Same-day return"
+                    : loanDays === 1
+                      ? "1 day loan period"
+                      : `${loanDays} days loan period`}
+                </span>
+              </div>
+
               <label>
                 Note to {owner.name.split(" ")[0]} <span>(Optional)</span>
                 <textarea
@@ -333,21 +368,70 @@ export default function ItemDetailPage() {
                 />
               </label>
 
+              <div className="quick-note-prompts">
+                <span>Quick note:</span>
+                {[
+                  "For lab practical",
+                  "For exam prep",
+                  "For weekend project",
+                  "For semester review",
+                ].map((promptText) => (
+                  <button
+                    type="button"
+                    key={promptText}
+                    className="prompt-chip"
+                    onClick={() => setMessage(promptText)}
+                  >
+                    {promptText}
+                  </button>
+                ))}
+              </div>
+
               {error && (
                 <p className="form-error" role="alert">
                   {error}
                 </p>
               )}
 
+              {pendingRequest && (
+                <div
+                  style={{
+                    background: "var(--amber-subtle)",
+                    border: "1px solid var(--amber-border)",
+                    padding: "10px 14px",
+                    borderRadius: "8px",
+                    marginBottom: 12,
+                    fontSize: "0.88rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    color: "var(--charcoal)",
+                  }}
+                >
+                  <Icon name="clock" size={16} />
+                  <span>
+                    You have a pending request for this item awaiting {owner.name}&apos;s reply.
+                  </span>
+                </div>
+              )}
+
               <Button
                 onClick={send}
-                disabled={busy || item.availabilityStatus !== "available"}
+                disabled={
+                  busy ||
+                  item.availabilityStatus !== "available" ||
+                  !!pendingRequest
+                }
                 className="wide"
               >
                 {busy ? (
                   "Submitting request…"
+                ) : pendingRequest ? (
+                  "Request Pending Reply"
                 ) : item.availabilityStatus !== "available" ? (
-                  "Currently unavailable"
+                  item.availabilityStatus === "reserved"
+                    ? "Reserved by neighbour"
+                    : "Currently borrowed"
                 ) : (
                   <>
                     Request to borrow <Icon name="arrow" size={16} />
@@ -355,7 +439,7 @@ export default function ItemDetailPage() {
                 )}
               </Button>
               <small>
-                Submitting records a real demo request. It does not reserve the
+                Submitting records a request with the lender. It does not reserve the
                 item until the owner approves.
               </small>
             </div>

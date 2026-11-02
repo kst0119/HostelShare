@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useApp } from "../../context/AppContext"
 import { useAuth } from "../../context/AuthContext"
@@ -10,8 +10,27 @@ import ThemeToggle from "./ThemeToggle"
 export default function Header() {
   const [open, setOpen] = useState(false)
   const [noticesOpen, setNoticesOpen] = useState(false)
+  const noticeRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!noticesOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (noticeRef.current && !noticeRef.current.contains(e.target as Node)) {
+        setNoticesOpen(false)
+      }
+    }
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setNoticesOpen(false)
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("keydown", handleEscape)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+      document.removeEventListener("keydown", handleEscape)
+    }
+  }, [noticesOpen])
 
   const { data, currentUser, switchUser, openNotice, setDialog, setFlash } = useApp()
   const { user, signOut } = useAuth()
@@ -133,26 +152,28 @@ export default function Header() {
             >
               Demo Catalog
             </Button>
-            <label
-              className="demo-switcher"
-              title="Switch sample student profile for testing"
-            >
-              <span>Demo Persona</span>
-              <select
-                value={currentUser.id}
-                onChange={(e) => {
-                  switchUser(e.target.value)
-                  setOpen(false)
-                }}
-                aria-label="Switch demo student profile"
+            {!user && (
+              <label
+                className="demo-switcher"
+                title="Switch sample student profile for testing"
               >
-                {data.users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+                <span>Demo Persona</span>
+                <select
+                  value={currentUser.id}
+                  onChange={(e) => {
+                    switchUser(e.target.value)
+                    setOpen(false)
+                  }}
+                  aria-label="Switch demo student profile"
+                >
+                  {data.users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
           </div>
         </nav>
       ) : (
@@ -194,7 +215,7 @@ export default function Header() {
 
           <ThemeToggle />
 
-          <div className="notice-wrap">
+          <div className="notice-wrap" ref={noticeRef}>
             <button
               type="button"
               className="notice-button"
@@ -228,20 +249,22 @@ export default function Header() {
             )}
           </div>
 
-          <label className="demo-switcher">
-            <span>Demo User · Simulated</span>
-            <select
-              value={currentUser.id}
-              onChange={(event) => switchUser(event.target.value)}
-              aria-label="Switch demo user"
-            >
-              {data.users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          {!user && (
+            <label className="demo-switcher">
+              <span>Demo User · Simulated</span>
+              <select
+                value={currentUser.id}
+                onChange={(event) => switchUser(event.target.value)}
+                aria-label="Switch demo user"
+              >
+                {data.users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           {user ? (
             <div

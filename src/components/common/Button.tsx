@@ -1,4 +1,4 @@
-import { CSSProperties, ReactNode } from "react"
+import { CSSProperties, MouseEvent, ReactNode } from "react"
 import { Link } from "react-router-dom"
 
 export default function Button({
@@ -14,7 +14,7 @@ export default function Button({
 }: {
   children: ReactNode
   variant?: "primary" | "secondary" | "text" | "dark" | "amber"
-  onClick?: () => void
+  onClick?: (e: MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => void
   type?: "button" | "submit"
   disabled?: boolean
   className?: string

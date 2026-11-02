@@ -105,19 +105,33 @@ function History({
 
 export default function ActivityPage() {
   const navigate = useNavigate()
-  const { data, currentUser, decideBorrowRequest } = useApp()
+  const {
+    data,
+    currentUser,
+    decideBorrowRequest,
+    cancelBorrowRequest,
+    requestsLoading,
+    requestsError,
+    refreshBorrowRequests,
+    refreshTransactions,
+    transactionsLoading,
+  } = useApp()
 
   const [tab, setTab] =
     useState<"overview" | "borrowing" | "lending" | "history">("overview")
+  const [actionBusyId, setActionBusyId] = useState<string | null>(null)
 
   const incoming = data.requests.filter(
-    (request) =>
-      request.ownerId === currentUser.id && request.status === "pending",
+    (request) => request.ownerId === currentUser.id,
   )
+  const incomingPending = incoming.filter((r) => r.status === "pending")
+  const incomingDecided = incoming.filter((r) => r.status !== "pending")
+
   const sent = data.requests.filter(
-    (request) =>
-      request.borrowerId === currentUser.id && request.status === "pending",
+    (request) => request.borrowerId === currentUser.id,
   )
+  const sentPending = sent.filter((r) => r.status === "pending")
+
   const active = data.transactions.filter(
     (transaction) =>
       [transaction.ownerId, transaction.borrowerId].includes(currentUser.id) &&
@@ -139,12 +153,37 @@ export default function ActivityPage() {
         : true,
   )
 
+  const handleDecision = async (id: string, decision: "approved" | "rejected") => {
+    setActionBusyId(id)
+    await decideBorrowRequest(id, decision)
+    setActionBusyId(null)
+  }
+
+  const handleCancel = async (id: string) => {
+    setActionBusyId(id)
+    await cancelBorrowRequest(id)
+    setActionBusyId(null)
+  }
+
+  const isSyncing = requestsLoading || transactionsLoading
+
   return (
     <main className="page activity-page">
       <SectionTitle
         eyebrow="Exchanges & Requests"
         aside={
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                refreshBorrowRequests()
+                refreshTransactions()
+              }}
+              disabled={isSyncing}
+              title="Refresh requests and exchanges"
+            >
+              <Icon name="clock" size={15} /> {isSyncing ? "Syncing…" : "Refresh"}
+            </Button>
             <Button variant="secondary" to="/requirements">
               Requirements Board <Icon name="arrow" size={15} />
             </Button>
@@ -157,20 +196,58 @@ export default function ActivityPage() {
         My Activity
       </SectionTitle>
 
+      {requestsError && (
+        <div
+          role="alert"
+          style={{
+            background: "rgba(229, 62, 62, 0.1)",
+            border: "1px solid var(--red, #e53e3e)",
+            borderRadius: 8,
+            padding: "10px 16px",
+            marginBottom: 20,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <span style={{ color: "var(--red, #e53e3e)", fontSize: "0.9rem" }}>
+            {requestsError}
+          </span>
+          <Button
+            variant="secondary"
+            onClick={() => refreshBorrowRequests()}
+            style={{ padding: "4px 8px", fontSize: "0.8rem" }}
+          >
+            Retry
+          </Button>
+        </div>
+      )}
+
       <div className="activity-tabs" role="tablist">
         {(["overview", "borrowing", "lending", "history"] as const).map(
-          (name) => (
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === name}
-              className={tab === name ? "active" : ""}
-              onClick={() => setTab(name)}
-              key={name}
-            >
-              {name[0].toUpperCase() + name.slice(1)}
-            </button>
-          ),
+          (name) => {
+            const count =
+              name === "overview"
+                ? active.length + incomingPending.length + sentPending.length
+                : name === "borrowing"
+                  ? sent.length
+                  : name === "lending"
+                    ? incoming.length
+                    : history.length
+            return (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={tab === name}
+                className={tab === name ? "active" : ""}
+                onClick={() => setTab(name)}
+                key={name}
+              >
+                <span>{name[0].toUpperCase() + name.slice(1)}</span>
+                {count > 0 && <span className="tab-count-badge">{count}</span>}
+              </button>
+            )
+          },
         )}
       </div>
 
@@ -182,12 +259,17 @@ export default function ActivityPage() {
             <section className="incoming-section">
               <div className="subhead">
                 <h2>Incoming requests for your items</h2>
-                <span>{incoming.length} waiting</span>
+                <span>
+                  {incomingPending.length} waiting
+                  {incomingDecided.length > 0 ? ` · ${incomingDecided.length} resolved` : ""}
+                </span>
               </div>
-              {incoming.length ? (
-                incoming.map((request) => {
+              {incomingPending.length ? (
+                incomingPending.map((request) => {
                   const item = itemFor(data, request.itemId)
                   const borrower = userFor(data, request.borrowerId)
+                  const isBusy = actionBusyId === request.id
+
                   return (
                     <div className="request-row" key={request.id}>
                       <img src={item.image} alt="" />
@@ -206,18 +288,16 @@ export default function ActivityPage() {
                       <div className="request-actions">
                         <Button
                           variant="secondary"
-                          onClick={() =>
-                            decideBorrowRequest(request.id, "rejected")
-                          }
+                          disabled={isBusy}
+                          onClick={() => handleDecision(request.id, "rejected")}
                         >
-                          Decline
+                          {isBusy ? "…" : "Decline"}
                         </Button>
                         <Button
-                          onClick={() =>
-                            decideBorrowRequest(request.id, "approved")
-                          }
+                          disabled={isBusy}
+                          onClick={() => handleDecision(request.id, "approved")}
                         >
-                          Approve <Icon name="check" size={15} />
+                          {isBusy ? "Approving…" : <>Approve <Icon name="check" size={15} /></>}
                         </Button>
                       </div>
                     </div>
@@ -230,6 +310,45 @@ export default function ActivityPage() {
                     <b>No pending incoming requests.</b> When other students
                     request your items, they will appear here.
                   </span>
+                </div>
+              )}
+
+              {incomingDecided.length > 0 && tab === "lending" && (
+                <div style={{ marginTop: 16 }}>
+                  <small style={{ color: "var(--muted)", fontWeight: 600, display: "block", marginBottom: 8 }}>
+                    Past Decision History
+                  </small>
+                  <div className="sent-list">
+                    {incomingDecided.map((request) => {
+                      const item = itemFor(data, request.itemId)
+                      const borrower = userFor(data, request.borrowerId)
+                      return (
+                        <div
+                          key={request.id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                            padding: "8px 12px",
+                            background: "var(--sage-light)",
+                            borderRadius: 8,
+                            fontSize: "0.88rem",
+                            marginBottom: 6,
+                          }}
+                        >
+                          <img
+                            src={item.image}
+                            alt=""
+                            style={{ width: 36, height: 36, borderRadius: 6, objectFit: "cover" }}
+                          />
+                          <span style={{ flex: 1 }}>
+                            <b>{item.name}</b> · Requested by {borrower.name} ({displayDate(request.requestedFrom)} — {displayDate(request.requestedUntil)})
+                          </span>
+                          <Status status={request.status} />
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               )}
             </section>
@@ -294,38 +413,113 @@ export default function ActivityPage() {
               {showSent && (
                 <>
                   <div className="subhead">
-                    <h2>Sent requests</h2>
-                    <span>{sent.length} pending</span>
+                    <h2>Sent requests (My Requests)</h2>
+                    <span>
+                      {sentPending.length} pending
+                      {sent.length > sentPending.length ? ` · ${sent.length} total` : ""}
+                    </span>
                   </div>
                   {sent.length ? (
                     <div className="sent-list">
-                      {sent.map((request) => (
-                        <button
-                          type="button"
-                          key={request.id}
-                          onClick={() => navigate(`/items/${request.itemId}`)}
-                        >
-                          <img
-                            src={itemFor(data, request.itemId).image}
-                            alt=""
-                          />
-                          <span>
-                            <b>{itemFor(data, request.itemId).name}</b>
-                            <small>
-                              Waiting for {userFor(data, request.ownerId).name}{" "}
-                              to reply
-                            </small>
-                          </span>
-                          <Status status={request.status} />
-                        </button>
-                      ))}
+                      {sent.map((request) => {
+                        const item = itemFor(data, request.itemId)
+                        const owner = userFor(data, request.ownerId)
+                        const isPending = request.status === "pending"
+                        const isBusy = actionBusyId === request.id
+
+                        return (
+                          <div
+                            key={request.id}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 12,
+                              padding: "10px 14px",
+                              border: "1px solid var(--line)",
+                              borderRadius: 8,
+                              background: "var(--card-bg)",
+                              marginBottom: 8,
+                            }}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/items/${request.itemId}`)}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 12,
+                                background: "none",
+                                border: "none",
+                                padding: 0,
+                                textAlign: "left",
+                                cursor: "pointer",
+                                flex: 1,
+                              }}
+                            >
+                              <img
+                                src={item.image}
+                                alt=""
+                                style={{
+                                  width: 44,
+                                  height: 44,
+                                  borderRadius: 6,
+                                  objectFit: "cover",
+                                }}
+                              />
+                              <span>
+                                <b style={{ display: "block" }}>{item.name}</b>
+                                <small style={{ color: "var(--muted)" }}>
+                                  {isPending
+                                    ? `Waiting for ${owner.name} to reply`
+                                    : request.status === "approved"
+                                      ? `Approved by ${owner.name} · Handover ready`
+                                      : request.status === "rejected"
+                                        ? `Declined by ${owner.name}`
+                                        : "Cancelled"}
+                                  {" · "}
+                                  {displayDate(request.requestedFrom)} to{" "}
+                                  {displayDate(request.requestedUntil)}
+                                </small>
+                              </span>
+                            </button>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 10,
+                              }}
+                            >
+                              <Status status={request.status} />
+                              {isPending && (
+                                <Button
+                                  variant="secondary"
+                                  disabled={isBusy}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleCancel(request.id)
+                                  }}
+                                  style={{
+                                    padding: "4px 10px",
+                                    fontSize: "0.8rem",
+                                    height: "auto",
+                                    minHeight: "auto",
+                                  }}
+                                >
+                                  {isBusy ? "…" : "Cancel"}
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   ) : (
                     <div className="small-empty">
                       <Icon name="clock" />
                       <span>
-                        <b>No outgoing pending requests.</b> Use Explore to find
-                        items you need.
+                        <b>No outgoing requests.</b> Use Explore to find items
+                        you need.
                       </span>
                     </div>
                   )}

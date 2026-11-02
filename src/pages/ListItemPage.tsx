@@ -5,6 +5,14 @@ import Icon from "../components/common/Icon"
 import { useApp } from "../context/AppContext"
 import { Category, dateOffset } from "../store"
 
+const PRESET_PHOTOS = [
+  { label: "Calculator", url: "https://images.unsplash.com/photo-1685038955804-3de172e7ff35?auto=format&fit=crop&w=1200&q=85" },
+  { label: "Badminton", url: "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=85" },
+  { label: "Kettle", url: "https://images.unsplash.com/photo-1594213114663-ddf4f240f08d?auto=format&fit=crop&w=1200&q=85" },
+  { label: "Mouse", url: "https://images.unsplash.com/photo-1668035626412-420df3662985?auto=format&fit=crop&w=1200&q=85" },
+  { label: "Tools", url: "https://images.unsplash.com/photo-1581147036324-c17ac41dfa6c?auto=format&fit=crop&w=1200&q=85" },
+]
+
 export default function ListItemPage() {
   const navigate = useNavigate()
   const { currentUser, createItemListing } = useApp()
@@ -223,6 +231,27 @@ export default function ListItemPage() {
                 <span>JPG, PNG, or WebP up to 8MB</span>
               </button>
             )}
+
+            <div style={{ marginTop: 14 }}>
+              <small style={{ color: "var(--muted)", fontWeight: 600, display: "block", marginBottom: 8 }}>
+                Or pick a sample preset photo:
+              </small>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {PRESET_PHOTOS.map((preset) => (
+                  <button
+                    type="button"
+                    key={preset.label}
+                    className="prompt-chip"
+                    onClick={() => {
+                      update("image", preset.url)
+                      setError("")
+                    }}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 

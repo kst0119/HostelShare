@@ -19,6 +19,7 @@ export default function Modal() {
 
   const [profile, setProfile] = useState<User>(currentUser)
   const [issue, setIssue] = useState("")
+  const [profileBusy, setProfileBusy] = useState(false)
 
   useEffect(() => {
     setProfile(currentUser)
@@ -63,7 +64,8 @@ export default function Modal() {
               In the meantime, the entire application is{" "}
               <b>100% interactive right now</b>. You can explore listings,
               submit borrow requests, approve handovers, and publish items using
-              our pre-configured demo student profiles (Aisha, Mira, and Kabir).
+              our pre-configured demo student profiles (Aisha, Kabir, Mira,
+              Rohan, Ananya, and Arjun).
             </p>
             <div className="modal-actions" style={{ marginTop: 24 }}>
               <Button variant="secondary" onClick={close}>
@@ -102,9 +104,11 @@ export default function Modal() {
 
         {dialog === "profile" && (
           <form
-            onSubmit={(event) => {
+            onSubmit={async (event) => {
               event.preventDefault()
-              updateProfile(profile)
+              setProfileBusy(true)
+              await updateProfile(profile)
+              setProfileBusy(false)
             }}
           >
             <span className="eyebrow">Edit Profile</span>
@@ -162,10 +166,12 @@ export default function Modal() {
               />
             </label>
             <div className="modal-actions">
-              <Button variant="secondary" onClick={close}>
+              <Button variant="secondary" onClick={close} disabled={profileBusy}>
                 Cancel
               </Button>
-              <Button type="submit">Save changes</Button>
+              <Button type="submit" disabled={profileBusy}>
+                {profileBusy ? "Saving…" : "Save changes"}
+              </Button>
             </div>
           </form>
         )}

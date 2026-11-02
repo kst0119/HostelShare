@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom"
 import { useApp } from "../../context/AppContext"
-import { Item, userFor } from "../../store"
+import { getUserRatingStats, Item, userFor } from "../../store"
 import Icon from "../common/Icon"
 import Status from "../common/Status"
 
@@ -19,6 +19,7 @@ export default function ItemCard({
   const navigate = useNavigate()
   const { data, toggleSaveItem } = useApp()
   const owner = userFor(data, item.ownerId)
+  const ownerStats = getUserRatingStats(data, owner.id)
 
   const isSaved =
     propSaved !== undefined ? propSaved : data.savedItemIds.includes(item.id)
@@ -44,7 +45,9 @@ export default function ItemCard({
     >
       <div className="item-image">
         <img src={item.image} alt={item.name} loading="lazy" />
-        <Status status={item.availabilityStatus} />
+        <div className="card-badge-wrap">
+          <Status status={item.availabilityStatus} />
+        </div>
         <button
           type="button"
           className={`heart ${isSaved ? "saved" : ""}`}
@@ -53,25 +56,40 @@ export default function ItemCard({
             event.stopPropagation()
             handleSave(item.id)
           }}
+          title={isSaved ? "Saved to your list" : "Save item"}
         >
-          <Icon name="heart" size={18} />
+          <Icon name="heart" size={17} />
         </button>
       </div>
       <div className="item-card-body">
         <div className="item-meta">
-          <span>{item.category}</span>
-          <span>{item.condition}</span>
+          <span className="category-tag">{item.category}</span>
+          <span className="condition-tag">{item.condition}</span>
         </div>
         <h3>{item.name}</h3>
         <div className="owner-row">
-          <span className="mini-avatar">{owner.avatar}</span>
-          <span>
-            <b>{owner.name}</b>
+          <span className="mini-avatar" aria-hidden="true">
+            {owner.avatar}
+          </span>
+          <div className="owner-meta">
+            <div className="owner-name-line">
+              <b>{owner.name}</b>
+              {ownerStats.reviewCount > 0 && (
+                <span
+                  className="owner-rating"
+                  title={`${ownerStats.averageRating} star community rating (${ownerStats.reviewCount} reviews)`}
+                >
+                  ★ {ownerStats.averageRating}
+                </span>
+              )}
+            </div>
             <small>
               {owner.hostel} · Room {owner.roomNumber}
             </small>
+          </div>
+          <span className="card-arrow" aria-hidden="true">
+            <Icon name="arrow" size={15} />
           </span>
-          <Icon name="arrow" size={16} />
         </div>
       </div>
     </article>
